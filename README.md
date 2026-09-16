@@ -1,0 +1,83 @@
+# 🎮 پلتفرم گیمیفیکیشن SaaS — Game-as-a-Service
+
+پیاده‌سازی MVP پلتفرم SaaS گیمیفیکیشن برای آنلاین‌شاپ‌ها و کسب‌وکارهای اینستاگرامی:
+فروشگاه‌دار کمپین بازی‌محور می‌سازد، مشتری از اینستاگرام وارد می‌شود، بازی می‌کند و
+کد تخفیف یا امتیاز می‌گیرد — و کل قیف تعامل قابل اندازه‌گیری است.
+
+پیاده‌سازی دقیقاً بر اساس **سند معماری مصوب** (`Gamification_SaaS_Architecture_Design_FA.docx`) انجام می‌شود.
+وضعیت مراحل و تسک‌ها: **[TASKS.md](TASKS.md)**
+
+## سه ستون معماری (فصل‌های ۵ و ۶ و ۴ سند)
+
+| موتور | مسئولیت | قاعده کلیدی |
+|-------|----------|--------------|
+| **Game Engine** | اجرای بازی‌ها به‌صورت پلاگین مستقل | افزودن بازی جدید = یک ماژول جدید + ثبت در Registry؛ بدون تغییر هسته |
+| **Reward Engine** | تصمیم و صدور جایزه | تنها ورودی «نتیجه بازی» است؛ احتمال، موجودی و سقف‌ها فقط اینجا |
+| **Campaign Engine** | چرخه حیات کمپین، قوانین مشارکت و سقف‌ها | انتشار، انقضا و Rule Engine داده‌محور |
+
+**اصول امنیتی غیرقابل مذاکره:**
+- نتیجه بازی فقط سمت سرور با `random_int` تولید می‌شود؛ کلاینت هیچ ورودی تصمیم‌گیری ندارد.
+- هر Session توکن یک‌بارمصرف دارد؛ Replay با خطای `SESSION_CONSUMED` رد می‌شود.
+- پاسخ نتیجه با HMAC امضا می‌شود.
+- چنداجارگی با Global Scope اجباری (`BelongsToStore`) — دسترسی Cross-Tenant همیشه 404 است.
+- عملیات‌های مالی با Transaction اتمی و Idempotency-Key.
+
+## استک فنی
+
+- **بک‌اند:** Laravel 13 · PHP 8.4 · Sanctum (توکن جدا برای Merchant و Customer)
+- **دیتابیس:** SQLite (WAL) — طراحی آماده مهاجرت به PostgreSQL (فصل ۳-۵ سند)
+- **صف و کش:** Database Queue + File/Database Cache (ارتقای بدون تغییر کد به Redis)
+- **فرانت‌اند (Sprint 4+):** PWA موبایل‌اول RTL — Vue 3 / Alpine.js + Tailwind + Vite
+- **API نسخه‌دار:** `/api/v1`
+
+## راه‌اندازی محلی
+
+```bash
+composer install
+cp .env.example .env
+php artisan key:generate
+touch database/database.sqlite
+php artisan migrate --seed     # سه Plan پیش‌فرض + بازی‌های MVP
+php artisan serve              # http://localhost:8000
+```
+
+> در حالت توسعه، درایور پیامک `log` است و کد OTP در `storage/logs/laravel.log` ثبت می‌شود.
+
+## تست‌ها
+
+```bash
+php artisan test               # کل Suite
+php artisan test --filter=OtpAuth      # فقط احراز هویت
+php artisan test --filter=WheelProbabilityTest  # توزیع احتمال (۱۰٬۰۰۰ اجرا)
+```
+
+هر اسپرینت تست‌های اجباری خود را دارد: Tenant Isolation (404)، Replay (SESSION_CONSUMED)،
+توزیع احتمال (±۲ واحد درصد)، تراز Ledger و اتمی بودن موجودی.
+
+## ساختار کد (Domain-Oriented — فصل ۴ سند)
+
+```
+app/
+├── Domain/                     ← دامنه‌ها (منطق کسب‌وکار)
+│   ├── Game/                   ← هسته: Contracts، DTO، Registry
+│   │   └── Plugins/            ← Wheel/ ، Dice/ ، Quiz/ ، ... (هر بازی یک پکیج)
+│   ├── Reward/                 ← هسته: Pipeline، Issuers، Inventory
+│   ├── Campaign/               ← هسته: Lifecycle، Rules، Limits
+│   ├── Subscription/           ← Plan، اشتراک، FeatureGate
+│   ├── Customer/  Points/  Coupon/  Analytics/  Referral/
+│   ├── Authentication/  Merchant/  Notification/
+├── Application/                ← Use Caseها و Orchestratorها (نازک)
+├── Infrastructure/             ← درایورهای بیرونی: Sms/ ، Payment/
+├── Http/Controllers/Api/V1     ← Controllerهای /api/v1 + Middleware
+├── Models/                     ← Eloquent Models (لایه persistence)
+└── Support/                    ← Tenancy، ابزارها و Helperهای مشترک
+```
+
+**قاعده وابستگی:** دامنه‌ها فقط از طریق **Contract** و **Domain Event** با هم صحبت می‌کنند.
+فراخوانی مستقیم کلاس داخلی دامنه دیگر یا پرس‌وجوی Cross-Domain ممنوع است.
+
+## جریان پیاده‌سازی
+
+نقشه راه هفت‌اسپرینتی (فصل ۱۰): Sprint 0 بستر → 1 Identity/SaaS → 2 Game Engine →
+3 Reward/Campaign → 4 بازی‌ها و PWA → 5 Analytics → 6 امنیت و بتا.
+جزئیات و پیشرفت لحظه‌ای در **[TASKS.md](TASKS.md)** ثبت می‌شود.
