@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\AnalyticsEvent;
 use App\Models\CampaignDailyStat;
+use App\Support\Tenancy\TenantContext;
 use Illuminate\Console\Command;
 
 /**
@@ -23,6 +24,9 @@ final class AggregateAnalytics extends Command
 
     public function handle(): int
     {
+        // دستور نگهدارنده سیستم‌محور است — باید همه Tenantها را ببیند
+        TenantContext::forget();
+
         $retention = (int) ($this->option('retention') ?: config('gamification.analytics.retention_days', 90));
 
         $this->aggregateDailyStats();

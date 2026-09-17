@@ -17,9 +17,9 @@
 | Sprint 3 | Reward و Coupon و Points | ۳ هفته | ✅ تکمیل شد | Resolver، Inventory، ۹ Issuer، Ledger امتیاز |
 | Sprint 4 | بازی‌ها و PWA | ۳ هفته | ✅ تکمیل شد | ۱۰ بازی پلاگین + PWA مشتری + پنل فروشگاه‌دار با Wizard |
 | Sprint 5 | Analytics و Retention | ۲ هفته | ✅ تکمیل شد | قیف، Endpoint گزارش، Referral پله‌ای، Check-in/Streak، تجمیع شبانه |
-| Sprint 6 | امنیت و بتا | ۲ هفته | ⬜ در انتظار | ماتریس تست امنیتی، Audit، استقرار |
+| Sprint 6 | امنیت و بتا | ۲ هفته | 🔶 تکمیل شد (سهم کد) | Audit کامل، ماتریس ۷ حمله، Scheduler، بکاپ، راهنمای استقرار |
 
-**آخرین به‌روزرسانی:** ۲۰۲۶-۰۹-۱۸ — Sprint 5 کامل شد: Analytics (رویداد Append-Only + قیف پنج‌مرحله‌ای + گزارش کمپین)، Referral پله‌ای ۱/۳/۵، Daily Check-in با Streak و پاداش، دستور تجمیع شبانه و پاک‌سازی؛ **۱۱۸ تست سبز (۲,۵۱۷ assertion)**
+**آخرین به‌روزرسانی:** ۲۰۲۶-۰۹-۱۸ — Sprint 6 کامل شد (سهم کد): Audit کامل رخدادهای حساس، ماتریس تست امنیتی (۷ سناریو)، Scheduler (بستن کمپین منقضی، انقضای Session)، دستور بکاپ، راهنمای استقرار؛ **۱۲۷ تست سبز (۲,۵۹۸ assertion)** — دو تصمیم باز (درایور واقعی پیامک/پرداخت) پیش از بتا نهایی می‌شود
 
 ---
 
@@ -171,13 +171,20 @@
   - زمان‌بندی ۰۳:۰۰ در Scheduler؛ مقایسه امن تاریخ با whereDate (سازگار SQLite/PostgreSQL)
 - [x] تست‌ها (۲۴ سناریوی جدید): جریان کامل قیف از API واقعی، برد بدون بودجه در win شمرده نمی‌شود، ایزوله‌سازی Tenant گزارش، صفر بدون تقسیم بر صفر، پله‌های ۱/۳/۵، تکرار Idempotent، دعوت خودی/نامعتبر/Cross-Store، ورود بدون شکست با کد نامعتبر، Streak پیوسته/پاداش/ریست، تجمیع دو روزه، Idempotent بودن دستور، حذف دوره نگهداری، رخداد بدون کمپین — **مجموع ۱۱۸ تست سبز (۲,۵۱۷ assertion)**
 
-## Sprint 6 — امنیت و بتا ⬜
+## Sprint 6 — امنیت و بتا 🔶 (سهم کد تکمیل شد؛ دو تصمیم باز پیش از بتا)
 
-- [ ] `audit_logs` کامل + ثبت همه رخدادهای حساس (ورود، Start Session، صدور جایزه، تغییر اشتراک)
-- [ ] اجرای کامل ماتریس تست امنیتی فصل ۱۰ (۷ سناریوی حمله)
-- [ ] Scheduler: بستن کمپین منقضی، انقضای Sessionها، قرعه‌کشی زمان‌دار
-- [ ] درایور پیامک واقعی + دروازه پرداخت واقعی (تصمیم‌های باز زیر)
-- [ ] آماده‌سازی استقرار (WAL حداکثری، صف Database، بکاپ) + بتای ۵ فروشگاه
+- [x] `audit_logs` کامل + ثبت همه رخدادهای حساس
+  - ورود (`auth.login` — موجود) + تلاش ناموفق OTP + شروع Session (`game.session_started`)
+  - نتیجه بازی (`game.played`) و صدور جایزه (`reward.issued` — Listener روی `RewardIssued`)
+  - تغییر اشتراک (`subscription.changed` — Listener روی `SubscriptionChanged`)
+  - انتشار کمپین (`campaign.published`)، استفاده کوپن (`coupon.redeemed`)، جایزه دعوت (`referral.rewarded`)
+  - پشتیبانی از actor_type (merchant/customer/system) در `AuditLog::record` — Append-Only
+- [x] اجرای کامل ماتریس تست امنیتی فصل ۱۰ — ۷ سناریو در `SecurityMatrixTest`:
+  ۱) Replay (SESSION_CONSUMED) ۲) دستکاری Payload کلاینت (نتیجه فقط سمت سرور) ۳) امضای HMAC (باطل‌سازی دستکاری) ۴) Brute Force OTP (Rate Limit + قفل تلاش + Audit) ۵) Cross-Tenant (404 بدون افشا روی ۵ Endpoint) ۶) بالا رفتن سطح دسترسی (توکن مشتری/فروشگاه‌دار/ناشناس) ۷) حدس کوپن (نبود نشت اطلاعات + تک‌مصرف اتمی)
+- [x] Scheduler: بستن کمپین منقضی (`campaigns:close-expired` هر ۱۰ دقیقه)، انقضای Session (`sessions:expire` هر ۵ دقیقه) — هر دو Idempotent با ریست TenantContext (قرعه‌کشی زمان‌دار پس از تعریف نوع بازی قرعه — خارج از MVP)
+- [x] آماده‌سازی استقرار: دستور `database:backup` (VACUUM INTO، نگه‌داری ۱۴ نسخه، زمان‌بندی ۰۴:۰۰)، QUEUE_CONNECTION=database، راهنمای کامل استقرار در README (cache، worker صف، cron)
+- [ ] درایور پیامک واقعی + دروازه پرداخت واقعی — 🔒 تصمیم باز (انتخاب سرویس‌دهنده با کاربر؛ قراردادها آماده در `app/Infrastructure/*`)
+- [ ] بتای ۵ فروشگاه — پس از نهایی شدن دو تصمیم بالا و استقرار روی سرور تولیدی
 
 ---
 

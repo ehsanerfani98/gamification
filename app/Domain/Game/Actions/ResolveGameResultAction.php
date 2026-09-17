@@ -9,6 +9,7 @@ use App\Domain\Game\Events\GamePlayed;
 use App\Domain\Game\GameRegistry;
 use App\Domain\Game\Services\ResultSigner;
 use App\Domain\Reward\RewardEngine;
+use App\Models\AuditLog;
 use App\Models\CampaignParticipation;
 use App\Models\GameSession;
 use App\Support\Exceptions\ApiException;
@@ -77,6 +78,14 @@ final class ResolveGameResultAction
         }
 
         $this->recordParticipation($session, $outcome);
+
+        // رخداد حساس — فصل ۲-۵ و ۱۰ (Sprint 6): ثبت Audit نتیجه بازی
+        AuditLog::record('game.played', null, $session->refresh(), [
+            'campaign_id' => (int) $session->campaign_id,
+            'customer_id' => (int) $session->customer_id,
+            'outcome' => $outcome,
+            'reward_status' => $reward['status'] ?? null,
+        ], actorType: 'customer');
 
         GamePlayed::dispatch($session->refresh(), new GameResult($outcome, $result->rewardRef, $result->raw, $result->display));
 

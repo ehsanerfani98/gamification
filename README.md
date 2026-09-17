@@ -52,7 +52,40 @@ php artisan test --filter=WheelProbabilityTest  # توزیع احتمال (۱۰�
 ```
 
 هر اسپرینت تست‌های اجباری خود را دارد: Tenant Isolation (404)، Replay (SESSION_CONSUMED)،
-توزیع احتمال (±۲ واحد درصد)، تراز Ledger و اتمی بودن موجودی.
+توزیع احتمال (±۲ واحد درصد)، تراز Ledger و اتمی بودن موجودی. ماتریس کامل ۷ سناریوی
+حمله امنیتی در `tests/Feature/Security/SecurityMatrixTest.php` است.
+
+## راهنمای استقرار (Sprint 6)
+
+```bash
+# ۱) کد و وابستگی‌ها
+composer install --no-dev --optimize-autoloader
+npm ci && npm run build
+
+# ۲) پیکربندی
+cp .env.example .env && php artisan key:generate --force
+# APP_ENV=production، APP_DEBUG=false — درایورهای SMS/Payment با env تعویض می‌شوند
+php artisan migrate --force
+
+# ۳) بهینه‌سازی
+php artisan config:cache && php artisan route:cache && php artisan event:cache
+
+# ۴) Worker صف (Supervisor) — QUEUE_CONNECTION=database
+php artisan queue:work --tries=3 --backoff=5
+
+# ۵) زمان‌بندی (cron هر دقیقه) — تجمیع Analytics، بستن کمپین منقضی،
+#    انقضای Session و بکاپ روزانه همه خودکار اجرا می‌شوند
+* * * * * php /path/to/artisan schedule:run
+```
+
+**پایگاه‌داده:** SQLite با WAL و busy_timeout (از env: `DB_JOURNAL_MODE=WAL`).
+بکاپ یکپارچه با `php artisan database:backup` (VACUUM INTO، نگه‌داری ۱۴ نسخه،
+زمان‌بندی ۰۴:۰۰) — بدون توقف سرویس. مهاجرت به PostgreSQL بدون تغییر کد
+Domain انجام می‌شود (فصل ۳-۵ سند).
+
+**وضعیت درایورهای تولیدی:** پیامک و دروازه پرداخت قرارداد تعویض‌پذیر دارند
+(`app/Infrastructure/*`)؛ درایور فعلی `LogSmsChannel` و `FakeGateway` است و
+پیش از بتا باید درایور واقعی (مثلاً Kavenegar/Zarinpal) اضافه شود.
 
 ## ساختار کد (Domain-Oriented — فصل ۴ سند)
 

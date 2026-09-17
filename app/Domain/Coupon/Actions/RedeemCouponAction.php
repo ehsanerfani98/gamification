@@ -3,8 +3,10 @@
 namespace App\Domain\Coupon\Actions;
 
 use App\Domain\Coupon\Events\CouponRedeemed;
+use App\Models\AuditLog;
 use App\Models\Coupon;
 use App\Models\CouponRedemption;
+use App\Models\User;
 use App\Support\Exceptions\ApiException;
 use Illuminate\Support\Facades\DB;
 
@@ -43,6 +45,15 @@ final class RedeemCouponAction
             ]);
 
             CouponRedeemed::dispatch($redemption);
+
+            // رخداد حساس — فصل ۲-۵ و ۱۰ (Sprint 6): ثبت Audit استفاده کوپن
+            $actor = auth()->user();
+
+            AuditLog::record('coupon.redeemed', $actor instanceof User ? $actor : null, $coupon, [
+                'redemption_id' => (int) $redemption->getKey(),
+                'amount_irt' => $amountIrt,
+                'order_ref' => $orderRef,
+            ]);
 
             return ['coupon' => $coupon->refresh(), 'redemption' => $redemption];
         });

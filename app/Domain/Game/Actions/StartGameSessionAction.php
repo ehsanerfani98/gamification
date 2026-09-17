@@ -4,6 +4,7 @@ namespace App\Domain\Game\Actions;
 
 use App\Domain\Campaign\Services\CampaignRuleEngine;
 use App\Domain\Game\Events\GameSessionStarted;
+use App\Models\AuditLog;
 use App\Models\Campaign;
 use App\Models\Customer;
 use App\Models\GameSession;
@@ -55,6 +56,13 @@ final class StartGameSessionAction
         ]);
 
         GameSessionStarted::dispatch($session);
+
+        // رخداد حساس — فصل ۲-۵ و ۱۰ (Sprint 6): ثبت Audit شروع Session
+        AuditLog::record('game.session_started', null, $session, [
+            'campaign_id' => (int) $campaign->getKey(),
+            'customer_id' => (int) $customer->getKey(),
+            'game_code' => $campaign->game?->code,
+        ], actorType: 'customer');
 
         return $session;
     }

@@ -3,7 +3,9 @@
 namespace App\Domain\Campaign\Actions;
 
 use App\Domain\Subscription\Services\FeatureGate;
+use App\Models\AuditLog;
 use App\Models\Campaign;
+use App\Models\User;
 use App\Support\Exceptions\ApiException;
 
 /**
@@ -41,6 +43,14 @@ final class PublishCampaignAction
         }
 
         $campaign->publish();
+
+        // رخداد حساس — فصل ۲-۵ و ۱۰ (Sprint 6): ثبت Audit انتشار کمپین
+        $actor = auth()->user();
+
+        AuditLog::record('campaign.published', $actor instanceof User ? $actor : null, $campaign->refresh(), [
+            'store_id' => (int) $campaign->store_id,
+            'game_code' => $campaign->game?->code,
+        ]);
 
         return $campaign->refresh();
     }

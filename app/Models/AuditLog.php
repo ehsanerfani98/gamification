@@ -31,10 +31,11 @@ class AuditLog extends Model
         ?Model $subject = null,
         array $meta = [],
         ?string $ip = null,
+        ?string $actorType = null,
     ): self {
         return static::create([
             'user_id' => $actor?->getKey(),
-            'actor_type' => $actor?->role ?? 'system',
+            'actor_type' => $actorType ?? $actor?->role ?? 'system',
             'action' => $action,
             'subject_type' => $subject ? $subject::class : null,
             'subject_id' => $subject?->getKey(),

@@ -14,10 +14,15 @@ use App\Domain\Customer\Events\CustomerEnteredCampaign;
 use App\Domain\Game\Events\GamePlayed;
 use App\Domain\Referral\Events\ReferralRegistered;
 use App\Domain\Retention\Events\CustomerCheckedIn;
+use App\Domain\Reward\Events\RewardIssued;
+use App\Domain\Subscription\Events\SubscriptionChanged;
 use App\Infrastructure\Payment\Drivers\FakeGateway;
 use App\Infrastructure\Payment\PaymentGateway;
 use App\Infrastructure\Sms\Drivers\LogSmsChannel;
 use App\Infrastructure\Sms\SmsChannel;
+use App\Support\Audit\Listeners\AuditReferralReward;
+use App\Support\Audit\Listeners\AuditRewardIssued;
+use App\Support\Audit\Listeners\AuditSubscriptionChanged;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -99,5 +104,16 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(CouponRedeemed::class, RecordCouponRedeem::class);
         Event::listen(CustomerCheckedIn::class, RecordCustomerCheckin::class);
         Event::listen(ReferralRegistered::class, RecordReferral::class);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Listenerهای Audit — فصل ۲-۵ و ۱۰ سند معماری (Sprint 6)
+        |--------------------------------------------------------------------------
+        | ثبت Append-Only رخدادهای حساس: صدور جایزه، تغییر اشتراک، جایزه دعوت.
+        | (ورود، شروع Session، نتیجه بازی و استفاده کوپن مستقیماً در Actionها ثبت می‌شوند.)
+        */
+        Event::listen(RewardIssued::class, AuditRewardIssued::class);
+        Event::listen(SubscriptionChanged::class, AuditSubscriptionChanged::class);
+        Event::listen(ReferralRewardGranted::class, AuditReferralReward::class);
     }
 }
