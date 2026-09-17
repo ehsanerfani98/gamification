@@ -13,13 +13,13 @@
 |-----|-------|------|--------|--------------|
 | Sprint 0 | بستر و اسکلت پروژه | ۱ هفته | ✅ تکمیل شد | اسکلت Laravel 13، ساختار Domain، قراردادها، CI |
 | Sprint 1 | Identity و SaaS | ۲ هفته | ✅ تکمیل شد | OTP، Merchant/Store، Plan، Subscription، Feature Gating |
-| Sprint 2 | Game Engine | ۳ هفته | ✅ تکمیل شد | Contractها، Session سمت سرور، Lucky Wheel، ضدتقلب |
-| Sprint 3 | Reward و Coupon و Points | ۳ هفته | ✅ تکمیل شد | Resolver، Inventory، ۹ Issuer، Ledger امتیاز |
+| Sprint 2 | Game Engine | ۳ هفته | 🔄 در حال انجام | Contractها، Session سمت سرور، Lucky Wheel، ضدتقلب |
+| Sprint 3 | Reward و Coupon و Points | ۳ هفته | ⬜ در انتظار | Resolver، Inventory، ۹ Issuer، Ledger امتیاز |
 | Sprint 4 | بازی‌ها و PWA | ۳ هفته | ⬜ در انتظار | ۹ بازی باقیمانده + PWA + پنل Wizard |
 | Sprint 5 | Analytics و Retention | ۲ هفته | ⬜ در انتظار | قیف، Referral، Daily Check-in، Streak |
 | Sprint 6 | امنیت و بتا | ۲ هفته | ⬜ در انتظار | ماتریس تست امنیتی، Audit، استقرار |
 
-**آخرین به‌روزرسانی:** ۲۰۲۶-۰۹-۱۷ — پایان Sprint 3 (Reward Engine کامل شد)
+**آخرین به‌روزرسانی:** ۲۰۲۶-۰۹-۱۷ — پایان Sprint 1 (Identity و SaaS کامل شد)
 
 ---
 
@@ -66,55 +66,55 @@
 
 ---
 
-## Sprint 2 — هسته Game Engine و Campaign ✅
+## Sprint 2 — هسته Game Engine و Campaign 🔄
 
 ### دامنه Customer (پشتیبان)
-- [x] Migration `customers` (موبایل یکتا در قلمرو هر Store، `referral_code`)
-- [x] ورود مشتری با OTP: `POST /api/v1/c/{slug}/enter` → توکن محدود دامنه‌دار
-- [x] `GET /api/v1/c/{slug}` — جزئیات عمومی کمپین برای PWA (config امنِ عمومی)
+- [ ] Migration `customers` (موبایل یکتا در قلمرو هر Store، `referral_code`)
+- [ ] ورود مشتری با OTP: `POST /api/v1/c/{slug}/enter` → توکن محدود دامنه‌دار
+- [ ] `GET /api/v1/c/{slug}` — جزئیات عمومی کمپین برای PWA (config امنِ عمومی)
 ### Campaign Engine (هسته)
-- [x] Migration: `campaigns` (slug، چرخه حیات، theme JSON)، `game_configurations`، `campaign_rules`، `campaign_participations`
-- [x] ماشین حالت کمپین: Draft → Published → Expired → Archived + Event `CampaignPublished`
-- [x] `CampaignRuleEngine`: قوانین مشارکت (روزی یک‌بار، سقف کل، فقط مشتری جدید) + ایندکس یکتا (customer, campaign, window)
-- [x] CRUD کمپین: `GET/POST /campaigns`، `GET/PATCH /campaigns/{id}`، `POST /campaigns/{id}/publish`
+- [ ] Migration: `campaigns` (slug، چرخه حیات، theme JSON)، `game_configurations`، `campaign_rules`، `campaign_participations`
+- [ ] ماشین حالت کمپین: Draft → Published → Expired → Archived + Event `CampaignPublished`
+- [ ] `CampaignRuleEngine`: قوانین مشارکت (روزی یک‌بار، سقف کل، فقط مشتری جدید) + ایندکس یکتا (customer, campaign, window)
+- [ ] CRUD کمپین: `GET/POST /campaigns`، `GET/PATCH /campaigns/{id}`، `POST /campaigns/{id}/publish`
 ### Game Engine (هسته)
-- [x] `GameRegistry` — نگاشت کد بازی ← پلاگین از `config/games.php` + اعتبارسنجی قرارداد
-- [x] DTOها + امضای HMAC نتیجه (`ResultSigner`)
-- [x] چرخه ۵ فازی Session سمت سرور (فصل ۵-۴): Start با توکن یک‌بارمصرف → اکشن → weighted RNG با `random_int` → واگذاری به Reward → ثبت + پاسخ امضاشده
-- [x] مصرف اتمی توکن (`WHERE status = started` → Replay با `SESSION_CONSUMED` رد می‌شود)
-- [x] `POST /play/sessions` (+ هدر Idempotency-Key) و `POST /play/sessions/{token}/action`
-- [x] `GET /api/v1/games` و `GET /api/v1/games/{code}/config-schema` (فیلتر بر اساس Plan)
-- [x] پلاگین **Lucky Wheel**: `configSchema` (segments وزنی)، `validateConfig`، weighted RNG، داده نمایش انیمیشن
+- [ ] `GameRegistry` — نگاشت کد بازی ← پلاگین از `config/games.php` + اعتبارسنجی قرارداد
+- [ ] DTOها + امضای HMAC نتیجه (`ResultSigner`)
+- [ ] چرخه ۵ فازی Session سمت سرور (فصل ۵-۴): Start با توکن یک‌بارمصرف → اکشن → weighted RNG با `random_int` → واگذاری به Reward → ثبت + پاسخ امضاشده
+- [ ] مصرف اتمی توکن (`WHERE status = started` → Replay با `SESSION_CONSUMED` رد می‌شود)
+- [ ] `POST /play/sessions` (+ هدر Idempotency-Key) و `POST /play/sessions/{token}/action`
+- [ ] `GET /api/v1/games` و `GET /api/v1/games/{code}/config-schema` (فیلتر بر اساس Plan)
+- [ ] پلاگین **Lucky Wheel**: `configSchema` (segments وزنی)، `validateConfig`، weighted RNG، داده نمایش انیمیشن
 ### تست‌ها (Definition of Done)
-- [x] تست توزیع احتمال (۱۰٬۰۰۰ اجرا، تلورانس ±۲ واحد درصد)
-- [x] تست Replay — دو اکشن با همان توکن → رد
-- [x] تست Daily Limit / سقف کل مشارکت
-- [x] تست Cross-Tenant روی کمپین → 404
-- [x] تست اعتبارسنجی Schema پیکربندی Wheel
+- [ ] تست توزیع احتمال (۱۰٬۰۰۰ اجرا، تلورانس ±۲ واحد درصد)
+- [ ] تست Replay — دو اکشن با همان توکن → رد
+- [ ] تست Daily Limit / سقف کل مشارکت
+- [ ] تست Cross-Tenant روی کمپین → 404
+- [ ] تست اعتبارسنجی Schema پیکربندی Wheel
 
 ---
 
-## Sprint 3 — Reward Engine و Coupon و Points ✅
+## Sprint 3 — Reward Engine و Coupon و Points ⬜
 
 ### مدل داده (فصل ۳-۴)
-- [x] Migration: `rewards` (۹ نوع، weight، سقف)، `reward_inventory` (موجودی جدا از تعریف)
-- [x] Migration: `coupons` + `coupon_redemptions` (کد یکتا متصل به مشتری/Store)
-- [x] Migration: `point_accounts` + `point_transactions` (الگوی Ledger دوطرفه)
+- [ ] Migration: `rewards` (۹ نوع، weight، سقف)، `reward_inventory` (موجودی جدا از تعریف)
+- [ ] Migration: `coupons` + `coupon_redemptions` (کد یکتا متصل به مشتری/Store)
+- [ ] Migration: `point_accounts` + `point_transactions` (الگوی Ledger دوطرفه)
 ### Reward Engine (فصل ۶)
-- [x] خط لوله تصمیم: کاندیداها → ۴ فیلتر (فعال، سقف کاربر، سقف نرخ برد، موجودی) → انتخاب وزنی → صدور
-- [x] قفل اتمی موجودی: `UPDATE ... WHERE remaining_qty > 0` داخل Transaction → در شکست، انتخاب وزنی روی باقیمانده تکرار می‌شود
-- [x] ۹ Issuer: تخفیف درصدی، مبلغ ثابت، ارسال رایگان، محصول رایگان، هدیه، امتیاز، کوپن فروشگاه، سفارشی، بدون جایزه
-- [x] تولید کد کوپن: الفبای بدون ابهام (بدون 0/O/1/I)، طول ۸، Prefix برند
-- [x] Ledger امتیاز: موجودی فقط از جمع تراکنش‌های امضاشده — هیچ کدی موجودی را مستقیم به‌روزرسانی نمی‌کند
-- [x] Eventهای `RewardIssued` / `CouponCreated` (Analytics و Notification بدون وابستگی مستقیم)
-- [x] `GET /api/v1/me/rewards` — کدها و امتیازهای مشتری
-- [x] اتصال نقطه واگذاری Session → Reward Engine در Game Engine (پلاگین‌ها هرگز مستقیم جایزه نمی‌سازند)
+- [ ] خط لوله تصمیم: کاندیداها → ۴ فیلتر (فعال، سقف کاربر، سقف نرخ برد، موجودی) → انتخاب وزنی → صدور
+- [ ] قفل اتمی موجودی: `UPDATE ... WHERE remaining_qty > 0` داخل Transaction → در شکست، انتخاب وزنی روی باقیمانده تکرار می‌شود
+- [ ] ۹ Issuer: تخفیف درصدی، مبلغ ثابت، ارسال رایگان، محصول رایگان، هدیه، امتیاز، کوپن فروشگاه، سفارشی، بدون جایزه
+- [ ] تولید کد کوپن: الفبای بدون ابهام (بدون 0/O/1/I)، طول ۸، Prefix برند
+- [ ] Ledger امتیاز: موجودی فقط از جمع تراکنش‌های امضاشده — هیچ کدی موجودی را مستقیم به‌روزرسانی نمی‌کند
+- [ ] Eventهای `RewardIssued` / `CouponCreated` (Analytics و Notification بدون وابستگی مستقیم)
+- [ ] `GET /api/v1/me/rewards` — کدها و امتیازهای مشتری
+- [ ] اتصال نقطه واگذاری Session → Reward Engine در Game Engine (پلاگین‌ها هرگز مستقیم جایزه نمی‌سازند)
 ### تست‌ها (Definition of Done)
-- [x] تست اتمی بودن کسر موجودی (دو صدور هم‌زمان → هرگز بیش از موجودی)
-- [x] تست یکتایی کد کوپن + انقضا + Redemption
-- [x] تست تراز Ledger (موجودی = Σ تراکنش‌ها)
-- [x] تست Fallback «بدون جایزه» هنگام خاتم بودجه کمپین
-- [x] تست سقف برد روزانه کاربر (فیلترهای موتور)
+- [ ] تست اتمی بودن کسر موجودی (دو صدور هم‌زمان → هرگز بیش از موجودی)
+- [ ] تست یکتایی کد کوپن + انقضا + Redemption
+- [ ] تست تراز Ledger (موجودی = Σ تراکنش‌ها)
+- [ ] تست Fallback «بدون جایزه» هنگام خاتم بودجه کمپین
+- [ ] تست سقف برد روزانه کاربر (فیلترهای موتور)
 
 ---
 
