@@ -186,3 +186,6 @@
 | ci | `323ebcf` | فعال‌سازی GitHub Actions (Pint + تست روی PHP 8.4) پس از مجوز workflow scope | 2026-09-17 |
 | 4 | `388fe98` | هر ۱۰ بازی MVP به‌صورت پلاگین + toPublicArray بازگشتی (۸۷ تست) | 2026-09-17 |
 | ci | `fc4074c` | رفع CI: ساخت .env و APP_KEY پیش از تست (حذف warning dotenv و MissingAppKey) | 2026-09-17 |
+| 5 | `75d383f` | فرانت ۱/۳: زیرساخت Vue 3 + Vite، کلاینت API مشترک، App Shell و SW | 2026-09-17 |
+| 6 | `e45b34e` | فرانت ۲/۳: PWA کامل مشتری — ۱۰ بازی lazy-load + Overlay + کیف جایزه | 2026-09-17 |
+| 7 | `ef6a907` | فرانت ۳/۳: پنل فروشگاه‌دار با Wizard پویا + رفع import Reward + ۴ تست رگرسیون (۹۴ تست) | 2026-09-17 |
