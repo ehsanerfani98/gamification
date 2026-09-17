@@ -54,6 +54,19 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
 
+        // سقف‌های سخت‌گیرانه مسیرهای حساس بازی — فصل ۸-۳
+        RateLimiter::for('play-start', function (Request $request) {
+            return [
+                Limit::perMinute(10)->by('play-start:'.($request->user()?->id ?: $request->ip())),
+            ];
+        });
+
+        RateLimiter::for('play-action', function (Request $request) {
+            return [
+                Limit::perMinute(30)->by('play-action:'.($request->user()?->id ?: $request->ip())),
+            ];
+        });
+
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(120)
                 ->by($request->user()?->id ?: $request->ip());

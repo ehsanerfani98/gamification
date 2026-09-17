@@ -1,6 +1,10 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Auth\OtpController;
+use App\Http\Controllers\Api\V1\CampaignController;
+use App\Http\Controllers\Api\V1\Customer\CampaignPublicController;
+use App\Http\Controllers\Api\V1\Customer\PlayController;
+use App\Http\Controllers\Api\V1\GameController;
 use App\Http\Controllers\Api\V1\PaymentController;
 use App\Http\Controllers\Api\V1\PlanController;
 use App\Http\Controllers\Api\V1\StoreController;
@@ -11,12 +15,12 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 | API نسخه‌دار /api/v1 — فصل ۸ سند معماری
 |--------------------------------------------------------------------------
-| Merchant و Admin با Sanctum Token پس از OTP، مشتری با Token محدود.
+| Merchant و Admin با Sanctum Token پس از OTP، مشتری با توکن محدود.
 | همه پاسخ‌ها JSON: موفق data / خطا error{code,message,fields}
 */
 
 Route::prefix('v1')->group(function (): void {
-    // ── احراز هویت (عمومی) ───────────────────────────────────────
+    // ── احراز هویت پنل (عمومی) ───────────────────────────────────
     // Rate Limit پلکانی: ۳/ساعت هر شماره + ۲۰/ساعت هر IP (فصل ۸-۳)
     Route::post('auth/otp/request', [OtpController::class, 'request'])
         ->middleware('throttle:otp');
@@ -34,6 +38,17 @@ Route::prefix('v1')->group(function (): void {
                 Route::get('plans', [PlanController::class, 'index']);
                 Route::get('subscriptions', [SubscriptionController::class, 'show']);
                 Route::post('subscriptions', [SubscriptionController::class, 'subscribe']);
+
+                // Game Library و Schema پویا
+                Route::get('games', [GameController::class, 'index']);
+                Route::get('games/{code}/config-schema', [GameController::class, 'configSchema']);
+
+                // کمپین‌ها
+                Route::get('campaigns', [CampaignController::class, 'index']);
+                Route::post('campaigns', [CampaignController::class, 'store']);
+                Route::get('campaigns/{id}', [CampaignController::class, 'show']);
+                Route::patch('campaigns/{id}', [CampaignController::class, 'update']);
+                Route::post('campaigns/{id}/publish', [CampaignController::class, 'publish']);
             });
         });
 
@@ -44,4 +59,20 @@ Route::prefix('v1')->group(function (): void {
     // ── callback دروازه پرداخت (امضاشده) ─────────────────────────
     Route::post('payments/callback', [PaymentController::class, 'callback'])
         ->middleware('throttle:payments');
+
+    // ── مسیرهای عمومی PWA کمپین (فصل ۹) ──────────────────────────
+    Route::get('c/{slug}', [CampaignPublicController::class, 'show']);
+    Route::post('c/{slug}/otp', [CampaignPublicController::class, 'otp'])
+        ->middleware('throttle:otp');
+    Route::post('c/{slug}/enter', [CampaignPublicController::class, 'enter'])
+        ->middleware('throttle:otp-verify');
+
+    // ── جریان بازی مشتری (توکن محدود با ability «customer») ───────
+    Route::middleware(['auth:customer', 'abilities:customer'])
+        ->group(function (): void {
+            Route::post('play/sessions', [PlayController::class, 'start'])
+                ->middleware('throttle:play-start');
+            Route::post('play/sessions/{token}/action', [PlayController::class, 'action'])
+                ->middleware('throttle:play-action');
+        });
 });

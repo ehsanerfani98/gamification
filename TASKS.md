@@ -13,13 +13,13 @@
 |-----|-------|------|--------|--------------|
 | Sprint 0 | بستر و اسکلت پروژه | ۱ هفته | ✅ تکمیل شد | اسکلت Laravel 13، ساختار Domain، قراردادها، CI |
 | Sprint 1 | Identity و SaaS | ۲ هفته | ✅ تکمیل شد | OTP، Merchant/Store، Plan، Subscription، Feature Gating |
-| Sprint 2 | Game Engine | ۳ هفته | 🔄 در حال انجام | Contractها، Session سمت سرور، Lucky Wheel، ضدتقلب |
-| Sprint 3 | Reward و Coupon و Points | ۳ هفته | ⬜ در انتظار | Resolver، Inventory، ۹ Issuer، Ledger امتیاز |
+| Sprint 2 | Game Engine | ۳ هفته | ✅ تکمیل شد | Contractها، Session سمت سرور، Lucky Wheel، ضدتقلب |
+| Sprint 3 | Reward و Coupon و Points | ۳ هفته | 🔄 در حال انجام | Resolver، Inventory، ۹ Issuer، Ledger امتیاز |
 | Sprint 4 | بازی‌ها و PWA | ۳ هفته | ⬜ در انتظار | ۹ بازی باقیمانده + PWA + پنل Wizard |
 | Sprint 5 | Analytics و Retention | ۲ هفته | ⬜ در انتظار | قیف، Referral، Daily Check-in، Streak |
 | Sprint 6 | امنیت و بتا | ۲ هفته | ⬜ در انتظار | ماتریس تست امنیتی، Audit، استقرار |
 
-**آخرین به‌روزرسانی:** ۲۰۲۶-۰۹-۱۷ — پایان Sprint 1 (Identity و SaaS کامل شد)
+**آخرین به‌روزرسانی:** ۲۰۲۶-۰۹-۱۷ — پایان Sprint 2 (Game Engine کامل شد؛ ۵۰ تست سبز)
 
 ---
 
@@ -66,31 +66,35 @@
 
 ---
 
-## Sprint 2 — هسته Game Engine و Campaign 🔄
+## Sprint 2 — هسته Game Engine و Campaign ✅
 
 ### دامنه Customer (پشتیبان)
-- [ ] Migration `customers` (موبایل یکتا در قلمرو هر Store، `referral_code`)
-- [ ] ورود مشتری با OTP: `POST /api/v1/c/{slug}/enter` → توکن محدود دامنه‌دار
-- [ ] `GET /api/v1/c/{slug}` — جزئیات عمومی کمپین برای PWA (config امنِ عمومی)
+- [x] Migration `customers` (موبایل یکتا در قلمرو هر Store، `referral_code`)
+- [x] ورود مشتری با OTP: `POST /api/v1/c/{slug}/enter` → توکن محدود دامنه‌دار (guard مخصوص customer)
+- [x] `GET /api/v1/c/{slug}` — جزئیات عمومی کمپین برای PWA (config امنِ عمومی بدون weight و reward_ref)
 ### Campaign Engine (هسته)
-- [ ] Migration: `campaigns` (slug، چرخه حیات، theme JSON)، `game_configurations`، `campaign_rules`، `campaign_participations`
-- [ ] ماشین حالت کمپین: Draft → Published → Expired → Archived + Event `CampaignPublished`
-- [ ] `CampaignRuleEngine`: قوانین مشارکت (روزی یک‌بار، سقف کل، فقط مشتری جدید) + ایندکس یکتا (customer, campaign, window)
-- [ ] CRUD کمپین: `GET/POST /campaigns`، `GET/PATCH /campaigns/{id}`، `POST /campaigns/{id}/publish`
+- [x] Migration: `campaigns` (slug، چرخه حیات، theme JSON)، `game_configurations`، `campaign_rules`، `game_sessions`، `campaign_participations`
+- [x] ماشین حالت کمپین: Draft → Published → Expired → Archived + Event `CampaignPublished`
+- [x] `CampaignRuleEngine`: قوانین مشارکت (روزی یک‌بار، سقف کل، فقط مشتری جدید) + ایندکس یکتا (customer, campaign, window)
+- [x] CRUD کمپین: `GET/POST /campaigns`، `GET/PATCH /campaigns/{id}`، `POST /campaigns/{id}/publish`
+- [x] سهمیه «کمپین فعال هم‌زمان» و Feature Gating بازی در Publish (QUOTA_EXCEEDED / PLAN_GAME_NOT_ALLOWED)
 ### Game Engine (هسته)
-- [ ] `GameRegistry` — نگاشت کد بازی ← پلاگین از `config/games.php` + اعتبارسنجی قرارداد
-- [ ] DTOها + امضای HMAC نتیجه (`ResultSigner`)
-- [ ] چرخه ۵ فازی Session سمت سرور (فصل ۵-۴): Start با توکن یک‌بارمصرف → اکشن → weighted RNG با `random_int` → واگذاری به Reward → ثبت + پاسخ امضاشده
-- [ ] مصرف اتمی توکن (`WHERE status = started` → Replay با `SESSION_CONSUMED` رد می‌شود)
-- [ ] `POST /play/sessions` (+ هدر Idempotency-Key) و `POST /play/sessions/{token}/action`
-- [ ] `GET /api/v1/games` و `GET /api/v1/games/{code}/config-schema` (فیلتر بر اساس Plan)
-- [ ] پلاگین **Lucky Wheel**: `configSchema` (segments وزنی)، `validateConfig`، weighted RNG، داده نمایش انیمیشن
+- [x] `GameRegistry` — نگاشت کد بازی ← پلاگین از `config/games.php` + اعتبارسنجی قرارداد
+- [x] DTOها + امضای HMAC نتیجه (`ResultSigner`)
+- [x] چرخه ۵ فازی Session سمت سرور (فصل ۵-۴): Start با توکن یک‌بارمصرف → اکشن → weighted RNG با `random_int` → واگذاری به Reward → ثبت + پاسخ امضاشده
+- [x] مصرف اتمی توکن (`WHERE status = started` → Replay با `SESSION_CONSUMED` رد می‌شود)
+- [x] `POST /play/sessions` (+ هدر Idempotency-Key) و `POST /play/sessions/{token}/action`
+- [x] `GET /api/v1/games` و `GET /api/v1/games/{code}/config-schema` (فیلتر بر اساس Plan)
+- [x] پلاگین **Lucky Wheel**: `configSchema` (segments وزنی)، `validateConfig`، weighted RNG، داده نمایش انیمیشن
+- [x] نقطه واگذاری `RewardEngine::resolveForSession` (پایپ‌لاین کامل در Sprint 3)
 ### تست‌ها (Definition of Done)
-- [ ] تست توزیع احتمال (۱۰٬۰۰۰ اجرا، تلورانس ±۲ واحد درصد)
-- [ ] تست Replay — دو اکشن با همان توکن → رد
-- [ ] تست Daily Limit / سقف کل مشارکت
-- [ ] تست Cross-Tenant روی کمپین → 404
-- [ ] تست اعتبارسنجی Schema پیکربندی Wheel
+- [x] تست توزیع احتمال (۱۰٬۰۰۰ اجرا، تلورانس ±۲ واحد درصد)
+- [x] تست Replay — دو اکشن با همان توکن → رد
+- [x] تست Daily Limit / سقف کل مشارکت
+- [x] تست Cross-Tenant روی کمپین → 404
+- [x] تست اعتبارسنجی Schema پیکربندی Wheel
+- [x] تست نادیده‌گرفتن ورودی کلاینت در نتیجه (reward_id / force_win)
+- [x] تست جریان کامل مشتری: کمپین عمومی → OTP → شروع → اکشن → نتیجه امضاشده
 
 ---
 

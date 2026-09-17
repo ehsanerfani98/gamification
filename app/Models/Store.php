@@ -25,6 +25,16 @@ class Store extends Model
         return $this->hasMany(Payment::class);
     }
 
+    public function campaigns(): HasMany
+    {
+        return $this->hasMany(Campaign::class);
+    }
+
+    public function customers(): HasMany
+    {
+        return $this->hasMany(Customer::class);
+    }
+
     /** اشتراک فعال جاری — برای Feature Gating (فصل ۷-۱) */
     public function activeSubscription(): ?Subscription
     {

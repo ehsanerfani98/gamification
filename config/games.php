@@ -1,5 +1,7 @@
 <?php
 
+use App\Domain\Game\Plugins\Wheel\WheelGame;
+
 // Game Registry — نگاشت «کد بازی» به «کلاس پلاگین» (فصل ۵-۱ سند معماری)
 // افزودن بازی جدید فقط یعنی ساخت پکیج در app/Domain/Game/Plugins و ثبت یک خط در اینجا.
 // هیچ تغییری در هسته Campaign، Subscription، Reward یا Analytics لازم نیست.
@@ -13,7 +15,7 @@ return [
     | کد بازی (همان کد جدول games) => کلاس پیاده‌کننده GameInterface
     */
     'plugins' => [
-        // 'wheel'        => \App\Domain\Game\Plugins\Wheel\WheelGame::class,
+        'wheel' => WheelGame::class,
         // 'dice'         => \App\Domain\Game\Plugins\Dice\DiceGame::class,
         // 'scratch'      => \App\Domain\Game\Plugins\Scratch\ScratchGame::class,
         // 'pick-box'     => \App\Domain\Game\Plugins\PickBox\PickBoxGame::class,
