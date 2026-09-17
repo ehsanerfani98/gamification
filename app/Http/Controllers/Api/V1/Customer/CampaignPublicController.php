@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1\Customer;
 
 use App\Domain\Authentication\Actions\RequestOtpAction;
+use App\Domain\Campaign\Events\CampaignViewed;
 use App\Domain\Campaign\Services\CampaignRuleEngine;
 use App\Domain\Customer\Actions\EnterCampaignAction;
 use App\Http\Concerns\ApiResponse;
@@ -55,6 +56,9 @@ final class CampaignPublicController extends Controller
                 ->remainingToday($campaign, $customer);
         }
 
+        // مرحله ۱ قیف Analytics — فصل ۱۰ (Sprint 5)
+        CampaignViewed::dispatch($campaign);
+
         return $this->ok($data);
     }
 
@@ -81,9 +85,16 @@ final class CampaignPublicController extends Controller
         $data = $request->validate([
             'phone' => ['required', 'string', 'regex:/^09\d{9}$/'],
             'code' => ['required', 'string', 'digits:6'],
+            // کد دعوت اختیاری دوست — فصل ۱۰ (Sprint 5)
+            'referral_code' => ['nullable', 'string', 'max:20'],
         ]);
 
-        $result = app(EnterCampaignAction::class)->handle($campaign, $data['phone'], $data['code']);
+        $result = app(EnterCampaignAction::class)->handle(
+            $campaign,
+            $data['phone'],
+            $data['code'],
+            $data['referral_code'] ?? null,
+        );
 
         return $this->ok([
             'token' => $result['token'],

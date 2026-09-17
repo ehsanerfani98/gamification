@@ -3,8 +3,11 @@
 namespace App\Domain\Customer\Actions;
 
 use App\Domain\Authentication\Services\OtpVerifier;
+use App\Domain\Customer\Events\CustomerEnteredCampaign;
+use App\Domain\Referral\Actions\CompleteReferralAction;
 use App\Models\Campaign;
 use App\Models\Customer;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 /**
@@ -13,6 +16,10 @@ use Illuminate\Support\Str;
  * مشتری در قلمرو Storeِ کمپین با موبایل یکتا شناسه می‌گیرد و توکنِ
  * محدودِ دامنه‌دار (abilities: customer) دریافت می‌کند که فقط به
  * Sessionها و کدهای خودش دسترسی دارد (فصل ۸-۱).
+ *
+ * Referral (فصل ۱۰): کد دعوت اختیاری است؛ دعوت نامعتبر هرگز ورود را
+ * نمی‌شکند (اصطکاک صفر ورود) و فقط Log می‌شود. مسیر صریح خطا،
+ * POST /referrals/apply است.
  */
 final class EnterCampaignAction
 {
@@ -20,7 +27,7 @@ final class EnterCampaignAction
         private readonly OtpVerifier $verifier,
     ) {}
 
-    public function handle(Campaign $campaign, string $phone, string $code): array
+    public function handle(Campaign $campaign, string $phone, string $code, ?string $referralCode = null): array
     {
         $this->verifier->verify($phone, $code, 'customer_login');
 
@@ -35,6 +42,12 @@ final class EnterCampaignAction
 
         $customer->markSeen();
 
+        if ($referralCode !== null && trim($referralCode) !== '') {
+            $this->applyReferral($customer, $referralCode);
+        }
+
+        CustomerEnteredCampaign::dispatch($customer, $campaign, $customer->wasRecentlyCreated);
+
         $token = $customer->createToken('campaign', ['customer'])->plainTextToken;
 
         return [
@@ -42,5 +55,18 @@ final class EnterCampaignAction
             'token' => $token,
             'is_new' => $customer->wasRecentlyCreated,
         ];
+    }
+
+    /** دعوت دوست — شکست آن غیرمسدودکننده است (فصل ۹-۱: ورود بدون اصطکاک) */
+    private function applyReferral(Customer $customer, string $referralCode): void
+    {
+        try {
+            app(CompleteReferralAction::class)->handle($customer, $referralCode);
+        } catch (\Throwable $e) {
+            Log::info('referral.enter_apply_ignored', [
+                'customer_id' => $customer->getKey(),
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

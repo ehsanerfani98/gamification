@@ -16,10 +16,10 @@
 | Sprint 2 | Game Engine | ۳ هفته | ✅ تکمیل شد | Contractها، Session سمت سرور، Lucky Wheel، ضدتقلب |
 | Sprint 3 | Reward و Coupon و Points | ۳ هفته | ✅ تکمیل شد | Resolver، Inventory، ۹ Issuer، Ledger امتیاز |
 | Sprint 4 | بازی‌ها و PWA | ۳ هفته | ✅ تکمیل شد | ۱۰ بازی پلاگین + PWA مشتری + پنل فروشگاه‌دار با Wizard |
-| Sprint 5 | Analytics و Retention | ۲ هفته | ⬜ در انتظار | قیف، Referral، Daily Check-in، Streak |
+| Sprint 5 | Analytics و Retention | ۲ هفته | ✅ تکمیل شد | قیف، Endpoint گزارش، Referral پله‌ای، Check-in/Streak، تجمیع شبانه |
 | Sprint 6 | امنیت و بتا | ۲ هفته | ⬜ در انتظار | ماتریس تست امنیتی، Audit، استقرار |
 
-**آخرین به‌روزرسانی:** ۲۰۲۶-۰۹-۱۷ — Sprint 4 کامل شد (بک‌اند + فرانت‌اند): ۱۰ بازی پلاگین، PWA مشتری با ۱۰ UI بازی و پنل فروشگاه‌دار با Wizard فرم پویا؛ ۹۴ تست سبز (۲,۳۲۱ assertion) + رفع باگ import مدل Reward در RewardIssuerTypes (با تست رگرسیون)
+**آخرین به‌روزرسانی:** ۲۰۲۶-۰۹-۱۸ — Sprint 5 کامل شد: Analytics (رویداد Append-Only + قیف پنج‌مرحله‌ای + گزارش کمپین)، Referral پله‌ای ۱/۳/۵، Daily Check-in با Streak و پاداش، دستور تجمیع شبانه و پاک‌سازی؛ **۱۱۸ تست سبز (۲,۵۱۷ assertion)**
 
 ---
 
@@ -149,13 +149,27 @@
 
 **Definition of Done:** ۱۰ بازی روی Game Engine + اجرا در WebView اینستاگرام → **بخش PWA تأیید شد با تست E2E مرورگری (OTP → Session → چرخش → برد امتیاز → کیف جایزه‌ها) و جریان کامل پنل (OTP → Wizard → جایزه → انتشار)**
 
-## Sprint 5 — Analytics و Retention ⬜
+## Sprint 5 — Analytics و Retention ✅
 
-- [ ] `analytics_events` (Append-Only) + قیف View → Enter → Play → Win → Redeem
-- [ ] `GET /api/v1/campaigns/{id}/analytics` — شاخص‌ها و قیف کمپین
-- [ ] Referral: کد دعوت، جایزه پله‌ای ۱/۳/۵ دعوت
-- [ ] Daily Check-in و Streak (`POST /api/v1/daily/checkin`)
-- [ ] تجمیع شبانه و پاک‌سازی جدول رخدادها
+- [x] `analytics_events` (Append-Only) + قیف View → Enter → Play → Win → Redeem
+  - جدول Append-Only با مسدودسازی updating در مدل؛ پاک‌سازی فقط از طریق دستور تجمیع
+  - ارتباط Cross-Domain فقط با Domain Event: `CampaignViewed`، `CustomerEnteredCampaign` (رویدادهای جدید) + `GamePlayed`، `CouponRedeemed` (موجود)
+  - Tracker مستقل با منطق «شکست Analytics هرگز جریان اصلی را نمی‌شکند» (try/catch + Log)
+  - «برد» فقط برای نتیجه win نهایی شمرده می‌شود — برد بدون بودجه (Fallback) در win ثبت نمی‌شود
+- [x] `GET /api/v1/campaigns/{id}/analytics` — قیف کمپین، نرخ تبدیل هر گام، مشتری یکتا و سری زمانی ۳۰ روزه
+  - نرخ تبدیل صفر در حالت بدون داده (بدون تقسیم بر صفر)؛ ایزوله‌سازی Tenant (Cross-Tenant → 404)
+- [x] Referral: کد دعوت قلمرو Store، جایزه پله‌ای ۱/۳/۵ دعوت
+  - `POST /api/v1/referrals/apply` + کد دعوت اختیاری در `POST /c/{slug}/enter`
+  - دعوت نامعتبر هرگز ورود را نمی‌شکند (اصطکاک صفر ورود — فصل ۹-۱)؛ مسیر صریح خطا با REFERRAL_INVALID 422
+  - دعوت خودی رد، ثبت تکراری Idempotent (already)، هر invited فقط یک‌بار (unique)
+  - جوایز فقط از طریق Ledger با مرجع رکورد دعوت + Eventهای `ReferralRegistered` و `ReferralRewardGranted`
+- [x] Daily Check-in و Streak (`POST /api/v1/daily/checkin`)
+  - امتیاز پایه ۱۰ + پاداش آستانه زنجیره ۷/۱۴/۳۰ روز (۵۰/۱۰۰/۲۰۰) — همه از Ledger
+  - چک‌این تکراری همان روز Idempotent؛ شکست زنجیره → ریست به ۱؛ پیکربندی در `config/gamification.php`
+- [x] تجمیع شبانه و پاک‌سازی جدول رخدادها
+  - دستور `analytics:aggregate` — بازمحاسبه Idempotent `campaign_daily_stats` (کمپین × روز) + حذف رخدادهای قدیمی‌تر از ۹۰ روز
+  - زمان‌بندی ۰۳:۰۰ در Scheduler؛ مقایسه امن تاریخ با whereDate (سازگار SQLite/PostgreSQL)
+- [x] تست‌ها (۲۴ سناریوی جدید): جریان کامل قیف از API واقعی، برد بدون بودجه در win شمرده نمی‌شود، ایزوله‌سازی Tenant گزارش، صفر بدون تقسیم بر صفر، پله‌های ۱/۳/۵، تکرار Idempotent، دعوت خودی/نامعتبر/Cross-Store، ورود بدون شکست با کد نامعتبر، Streak پیوسته/پاداش/ریست، تجمیع دو روزه، Idempotent بودن دستور، حذف دوره نگهداری، رخداد بدون کمپین — **مجموع ۱۱۸ تست سبز (۲,۵۱۷ assertion)**
 
 ## Sprint 6 — امنیت و بتا ⬜
 

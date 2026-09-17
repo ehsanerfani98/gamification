@@ -1,11 +1,14 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AnalyticsController;
 use App\Http\Controllers\Api\V1\Auth\OtpController;
 use App\Http\Controllers\Api\V1\CampaignController;
 use App\Http\Controllers\Api\V1\CouponController;
 use App\Http\Controllers\Api\V1\Customer\CampaignPublicController;
+use App\Http\Controllers\Api\V1\Customer\DailyController;
 use App\Http\Controllers\Api\V1\Customer\MeController;
 use App\Http\Controllers\Api\V1\Customer\PlayController;
+use App\Http\Controllers\Api\V1\Customer\ReferralController;
 use App\Http\Controllers\Api\V1\GameController;
 use App\Http\Controllers\Api\V1\PaymentController;
 use App\Http\Controllers\Api\V1\PlanController;
@@ -59,6 +62,9 @@ Route::prefix('v1')->group(function (): void {
 
                 // ثبت استفاده واقعی کوپن در فروشگاه (ROI)
                 Route::post('coupons/redeem', [CouponController::class, 'redeem']);
+
+                // گزارش Analytics کمپین — فصل ۱۰ (Sprint 5)
+                Route::get('campaigns/{id}/analytics', [AnalyticsController::class, 'campaign']);
             });
         });
 
@@ -87,5 +93,9 @@ Route::prefix('v1')->group(function (): void {
 
             // کدها و امتیازهای مشتری
             Route::get('me/rewards', [MeController::class, 'rewards']);
+
+            // Retention — فصل ۱۰ (Sprint 5)
+            Route::post('daily/checkin', [DailyController::class, 'checkin']);
+            Route::post('referrals/apply', [ReferralController::class, 'apply']);
         });
 });
