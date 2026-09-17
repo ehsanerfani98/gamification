@@ -4,6 +4,9 @@ namespace Tests\Concerns;
 
 use App\Models\Campaign;
 use App\Models\Customer;
+use App\Models\GameSession;
+use App\Models\Reward;
+use App\Models\RewardInventory;
 use Illuminate\Testing\TestResponse;
 
 /**
@@ -79,5 +82,48 @@ trait CreatesCampaigns
                 'type' => 'spin',
                 'payload' => $payload,
             ]);
+    }
+
+    /** ساخت جایزه + موجودی اولیه برای کمپین */
+    protected function createReward(Campaign $campaign, array $attrs = []): Reward
+    {
+        $reward = $campaign->rewards()->create([
+            'store_id' => $campaign->store_id,
+            'ref' => $attrs['ref'] ?? 'r-test-'.random_int(1000, 9999),
+            'type' => $attrs['type'] ?? Reward::TYPE_PERCENTAGE,
+            'name' => $attrs['name'] ?? 'تخفیف تست',
+            'params' => $attrs['params'] ?? ['percent' => 10],
+            'weight' => $attrs['weight'] ?? 1,
+            'total_qty' => array_key_exists('total_qty', $attrs) ? $attrs['total_qty'] : 100,
+            'is_active' => $attrs['is_active'] ?? true,
+        ]);
+
+        RewardInventory::query()->create([
+            'reward_id' => $reward->id,
+            'remaining_qty' => array_key_exists('remaining_qty', $attrs)
+                ? $attrs['remaining_qty']
+                : ($reward->total_qty ?? 0),
+        ]);
+
+        return $reward;
+    }
+
+    /** ساخت Session مستقیم با مدل (برای تست‌های قطعی موتور) */
+    protected function makeSession(Campaign $campaign, string $phone = '09331112233'): GameSession
+    {
+        $customer = Customer::query()->firstOrCreate(
+            ['store_id' => $campaign->store_id, 'phone' => $phone],
+            ['referral_code' => 'TST'.random_int(100, 999)],
+        );
+
+        return GameSession::query()->create([
+            'store_id' => $campaign->store_id,
+            'campaign_id' => $campaign->id,
+            'customer_id' => $customer->id,
+            'play_token' => bin2hex(random_bytes(24)),
+            'status' => 'started',
+            'started_at' => now(),
+            'token_expires_at' => now()->addMinutes(10),
+        ]);
     }
 }

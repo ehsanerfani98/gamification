@@ -2,11 +2,14 @@
 
 use App\Http\Controllers\Api\V1\Auth\OtpController;
 use App\Http\Controllers\Api\V1\CampaignController;
+use App\Http\Controllers\Api\V1\CouponController;
 use App\Http\Controllers\Api\V1\Customer\CampaignPublicController;
+use App\Http\Controllers\Api\V1\Customer\MeController;
 use App\Http\Controllers\Api\V1\Customer\PlayController;
 use App\Http\Controllers\Api\V1\GameController;
 use App\Http\Controllers\Api\V1\PaymentController;
 use App\Http\Controllers\Api\V1\PlanController;
+use App\Http\Controllers\Api\V1\RewardController;
 use App\Http\Controllers\Api\V1\StoreController;
 use App\Http\Controllers\Api\V1\SubscriptionController;
 use Illuminate\Support\Facades\Route;
@@ -49,6 +52,13 @@ Route::prefix('v1')->group(function (): void {
                 Route::get('campaigns/{id}', [CampaignController::class, 'show']);
                 Route::patch('campaigns/{id}', [CampaignController::class, 'update']);
                 Route::post('campaigns/{id}/publish', [CampaignController::class, 'publish']);
+
+                // جایزه‌های کمپین
+                Route::get('campaigns/{id}/rewards', [RewardController::class, 'index']);
+                Route::post('campaigns/{id}/rewards', [RewardController::class, 'store']);
+
+                // ثبت استفاده واقعی کوپن در فروشگاه (ROI)
+                Route::post('coupons/redeem', [CouponController::class, 'redeem']);
             });
         });
 
@@ -74,5 +84,8 @@ Route::prefix('v1')->group(function (): void {
                 ->middleware('throttle:play-start');
             Route::post('play/sessions/{token}/action', [PlayController::class, 'action'])
                 ->middleware('throttle:play-action');
+
+            // کدها و امتیازهای مشتری
+            Route::get('me/rewards', [MeController::class, 'rewards']);
         });
 });

@@ -14,12 +14,12 @@
 | Sprint 0 | بستر و اسکلت پروژه | ۱ هفته | ✅ تکمیل شد | اسکلت Laravel 13، ساختار Domain، قراردادها، CI |
 | Sprint 1 | Identity و SaaS | ۲ هفته | ✅ تکمیل شد | OTP، Merchant/Store، Plan، Subscription، Feature Gating |
 | Sprint 2 | Game Engine | ۳ هفته | ✅ تکمیل شد | Contractها، Session سمت سرور، Lucky Wheel، ضدتقلب |
-| Sprint 3 | Reward و Coupon و Points | ۳ هفته | 🔄 در حال انجام | Resolver، Inventory، ۹ Issuer، Ledger امتیاز |
+| Sprint 3 | Reward و Coupon و Points | ۳ هفته | ✅ تکمیل شد | Resolver، Inventory، ۹ Issuer، Ledger امتیاز |
 | Sprint 4 | بازی‌ها و PWA | ۳ هفته | ⬜ در انتظار | ۹ بازی باقیمانده + PWA + پنل Wizard |
 | Sprint 5 | Analytics و Retention | ۲ هفته | ⬜ در انتظار | قیف، Referral، Daily Check-in، Streak |
 | Sprint 6 | امنیت و بتا | ۲ هفته | ⬜ در انتظار | ماتریس تست امنیتی، Audit، استقرار |
 
-**آخرین به‌روزرسانی:** ۲۰۲۶-۰۹-۱۷ — پایان Sprint 2 (Game Engine کامل شد؛ ۵۰ تست سبز)
+**آخرین به‌روزرسانی:** ۲۰۲۶-۰۹-۱۷ — پایان Sprint 3 (Reward Engine کامل شد؛ ۶۶ تست سبز)
 
 ---
 
@@ -98,31 +98,33 @@
 
 ---
 
-## Sprint 3 — Reward Engine و Coupon و Points ⬜
+## Sprint 3 — Reward Engine و Coupon و Points ✅
 
 ### مدل داده (فصل ۳-۴)
-- [ ] Migration: `rewards` (۹ نوع، weight، سقف)، `reward_inventory` (موجودی جدا از تعریف)
-- [ ] Migration: `coupons` + `coupon_redemptions` (کد یکتا متصل به مشتری/Store)
-- [ ] Migration: `point_accounts` + `point_transactions` (الگوی Ledger دوطرفه)
+- [x] Migration: `rewards` (۹ نوع، weight، سقف) + `reward_inventory` (موجودی جدا از تعریف)
+- [x] Migration: `coupons` + `coupon_redemptions` (کد یکتا متصل به مشتری/Store)
+- [x] Migration: `point_accounts` + `point_transactions` (الگوی Ledger دوطرفه، Append-Only)
 ### Reward Engine (فصل ۶)
-- [ ] خط لوله تصمیم: کاندیداها → ۴ فیلتر (فعال، سقف کاربر، سقف نرخ برد، موجودی) → انتخاب وزنی → صدور
-- [ ] قفل اتمی موجودی: `UPDATE ... WHERE remaining_qty > 0` داخل Transaction → در شکست، انتخاب وزنی روی باقیمانده تکرار می‌شود
-- [ ] ۹ Issuer: تخفیف درصدی، مبلغ ثابت، ارسال رایگان، محصول رایگان، هدیه، امتیاز، کوپن فروشگاه، سفارشی، بدون جایزه
-- [ ] تولید کد کوپن: الفبای بدون ابهام (بدون 0/O/1/I)، طول ۸، Prefix برند
-- [ ] Ledger امتیاز: موجودی فقط از جمع تراکنش‌های امضاشده — هیچ کدی موجودی را مستقیم به‌روزرسانی نمی‌کند
-- [ ] Eventهای `RewardIssued` / `CouponCreated` (Analytics و Notification بدون وابستگی مستقیم)
-- [ ] `GET /api/v1/me/rewards` — کدها و امتیازهای مشتری
-- [ ] اتصال نقطه واگذاری Session → Reward Engine در Game Engine (پلاگین‌ها هرگز مستقیم جایزه نمی‌سازند)
+- [x] خط لوله تصمیم: کاندیدها → فیلترها (فعال، سقف برد روزانه، موجودی) → انتخاب وزنی → صدور
+- [x] قفل اتمی موجودی: `UPDATE ... WHERE remaining_qty > 0` داخل Transaction → در شکست، انتخاب وزنی روی باقیمانده تکرار می‌شود
+- [x] ۹ Issuer با Registry: تخفیف درصدی، مبلغ ثابت، ارسال رایگان، محصول رایگان (CouponIssuer)، هدیه (GiftIssuer)، امتیاز (PointsIssuer)، کوپن فروشگاه + سفارشی (CustomIssuer)، بدون جایزه (NoneIssuer)
+- [x] تولید کد کوپن: الفبای بدون ابهام (بدون 0/O/1/I)، طول ۸، Prefix برند
+- [x] Ledger امتیاز: موجودی فقط از جمع تراکنش‌ها — هیچ کدی موجودی را مستقیم به‌روزرسانی نمی‌کند
+- [x] Eventهای `RewardIssued` / `CouponCreated` / `CouponRedeemed` / `PointsEarned`
+- [x] Fallback شفاف: بردی که بودجه نداشت → «بدون جایزه» در نتیجه Session
+- [x] `GET/POST /api/v1/campaigns/{id}/rewards` + سقف تعداد جایزه بر اساس Plan
+- [x] `POST /api/v1/coupons/redeem` — ثبت استفاده واقعی (حلقه ROI) با مصرف اتمی
+- [x] `GET /api/v1/me/rewards` — کدها و امتیازهای مشتری
 ### تست‌ها (Definition of Done)
-- [ ] تست اتمی بودن کسر موجودی (دو صدور هم‌زمان → هرگز بیش از موجودی)
-- [ ] تست یکتایی کد کوپن + انقضا + Redemption
-- [ ] تست تراز Ledger (موجودی = Σ تراکنش‌ها)
-- [ ] تست Fallback «بدون جایزه» هنگام خاتم بودجه کمپین
-- [ ] تست سقف برد روزانه کاربر (فیلترهای موتور)
+- [x] تست اتمی بودن کسر موجودی (۵ صدور با موجودی ۲ → دقیقاً ۲ صدور، هرگز منفی)
+- [x] تست یکتایی و الگوی کد کوپن + انقضا + Redemption یک‌بارمصرف
+- [x] تست تراز Ledger (موجودی = Σ تراکنش‌ها، +۵۰ +۳۰ −۲۰ = ۶۰)
+- [x] تست Fallback «بدون جایزه» هنگام خاتم بودجه کمپین
+- [x] تست واگذاری به جایزه جایگزین با انتخاب وزنی پس از اتمام موجودی
 
 ---
 
-## Sprint 4 — بازی‌های باقیمانده و PWA ⬜
+## Sprint 4## Sprint 4 — بازی‌های باقیمانده و PWA ⬜
 
 - [ ] ۹ بازی باقیمانده به‌عنوان پلاگین مستقل: Dice، Scratch Card، Pick a Box، Pick a Card، Lucky Ticket، Quiz، Memory، Reaction، Lucky Claw
 - [ ] Frontend Registry و Lazy-load کامپوننت هر بازی

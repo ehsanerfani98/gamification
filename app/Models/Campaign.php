@@ -59,6 +59,11 @@ class Campaign extends Model
         return $this->hasMany(CampaignParticipation::class);
     }
 
+    public function rewards(): HasMany
+    {
+        return $this->hasMany(Reward::class);
+    }
+
     public function scopePlayable($query)
     {
         return $query->where('status', self::STATUS_PUBLISHED)

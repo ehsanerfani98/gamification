@@ -3,6 +3,7 @@
 namespace App\Domain\Game\Actions;
 
 use App\Domain\Campaign\Services\CampaignRuleEngine;
+use App\Domain\Game\DTO\GameResult;
 use App\Domain\Game\DTO\PlayerAction;
 use App\Domain\Game\Events\GamePlayed;
 use App\Domain\Game\GameRegistry;
@@ -43,8 +44,15 @@ final class ResolveGameResultAction
         // فاز ۴: واگذاری به Reward Engine (پلاگین هرگز جایزه نمی‌سازد)
         $reward = $this->rewardEngine->resolveForSession($campaign, $session, $result);
 
+        $outcome = $result->outcome;
+
+        // Fallback شفاف: بردی که بودجه/موجودی نداشت → بدون جایزه (فصل ۶-۱)
+        if ($result->isWin() && ($reward === null || $reward['status'] === 'fallback_no_reward')) {
+            $outcome = GameResult::OUTCOME_NO_REWARD;
+        }
+
         $payload = [
-            'outcome' => $result->outcome,
+            'outcome' => $outcome,
             'reward_ref' => $result->rewardRef,
             'raw' => $result->raw,
             'display' => $result->display,
@@ -68,9 +76,9 @@ final class ResolveGameResultAction
             throw new ApiException('SESSION_CONSUMED', 'این Session قبلاً مصرف شده است.', 409);
         }
 
-        $this->recordParticipation($session, $result->outcome);
+        $this->recordParticipation($session, $outcome);
 
-        GamePlayed::dispatch($session->refresh(), $result);
+        GamePlayed::dispatch($session->refresh(), new GameResult($outcome, $result->rewardRef, $result->raw, $result->display));
 
         return [
             'result' => $payload,
