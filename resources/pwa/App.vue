@@ -1,10 +1,13 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
 import { api, ApiError, getToken, setToken } from '../shared/api.js';
+import GameStage from './components/GameStage.vue';
+import ResultOverlay from './components/ResultOverlay.vue';
+import RewardsSheet from './components/RewardsSheet.vue';
 
 /**
  * PWA مشتری — جریان فصل ۹-۱:
- * بارگذاری کمپین → ورود با موبایل+OTP → بازی → نتیجه → کیف جایزه‌ها.
+ * بارگذاری کمپین → ورود با موبایل+OTP → بازی (Stage) → نتیجه (Overlay) → کیف جایزه‌ها.
  * نتیجه بازی هرگز سمت کلاینت تولید نمی‌شود؛ فقط «نمایش» داده سرور را دارد (فصل ۲-۵).
  */
 const slug = window.location.pathname.match(/^\/c\/([a-z0-9-]+)/)?.[1] ?? '';
@@ -14,6 +17,10 @@ const loadError = ref('');
 const campaign = ref(null);
 const customer = ref(null);
 const remaining = ref(null);
+const playResult = ref(null);
+const showRewards = ref(false);
+
+const token = computed(() => getToken(slug));
 
 /* ── ورود ─────────────────────────────────────────────── */
 const phone = ref('');
@@ -36,13 +43,11 @@ function applyTheme(theme) {
 async function loadCampaign() {
     stage.value = 'loading';
     try {
-        const token = getToken(slug);
-        const data = await api(`/c/${slug}`, { token });
+        const data = await api(`/c/${slug}`, { token: getToken(slug) });
         campaign.value = data;
         applyTheme(data.theme);
         if (data.rules_summary?.remaining !== undefined) {
             remaining.value = data.rules_summary.remaining;
-            customer.value = { entered: true };
             stage.value = 'ready';
         } else {
             stage.value = 'gate';
@@ -99,7 +104,10 @@ onMounted(loadCampaign);
 </script>
 
 <template>
-    <div class="min-h-dvh bg-gradient-to-b from-violet-700 to-pink-500 bg-fixed" :style="{ background: 'var(--gm-bg, linear-gradient(to bottom, var(--gm-primary, #6d28d9), var(--gm-accent, #ec4899)))' }">
+    <div
+        class="min-h-dvh"
+        :style="{ background: 'var(--gm-bg, linear-gradient(to bottom, var(--gm-primary, #6d28d9), var(--gm-accent, #ec4899)))' }"
+    >
         <!-- بارگذاری -->
         <div v-if="stage === 'loading'" class="flex min-h-dvh items-center justify-center">
             <div class="size-12 animate-spin rounded-full border-4 border-white/30 border-t-white" aria-label="در حال بارگذاری"></div>
@@ -119,7 +127,7 @@ onMounted(loadCampaign);
                 <p v-if="campaign?.game" class="mt-1 text-sm text-white/80">بازی: {{ campaign.game.name }}</p>
             </header>
 
-            <main class="mx-auto w-full max-w-md px-4 pb-10">
+            <main class="mx-auto w-full max-w-md px-4 pb-16">
                 <!-- ورود با OTP -->
                 <section v-if="stage === 'gate'" class="rounded-3xl bg-white p-6 shadow-2xl">
                     <h2 class="text-lg font-bold text-slate-800">برای شرکت در بازی وارد شوید</h2>
@@ -158,7 +166,7 @@ onMounted(loadCampaign);
 
                         <button
                             type="submit"
-                            class="w-full rounded-2xl bg-violet-600 py-3.5 text-lg font-bold text-white shadow-lg transition active:scale-[0.98] disabled:opacity-50"
+                            class="w-full rounded-2xl py-3.5 text-lg font-bold text-white shadow-lg transition active:scale-[0.98] disabled:opacity-50"
                             :style="{ background: 'var(--gm-primary, #6d28d9)' }"
                             :disabled="sending || entering || (otpSent ? code.trim().length !== 6 : !phoneValid)"
                         >
@@ -171,16 +179,37 @@ onMounted(loadCampaign);
                     </form>
                 </section>
 
-                <!-- محیط بازی (Sprint 4 — Commit 2: کامپوننت‌های ۱۰ بازی) -->
-                <section v-else class="rounded-3xl bg-white p-6 text-center shadow-2xl">
-                    <p class="text-slate-500">
-                        {{ campaign?.title }}
-                    </p>
-                    <p v-if="remaining !== null" class="mt-2 text-sm text-slate-400">فرصت باقی‌مانده امروز: {{ remaining }}</p>
-                    <p class="mt-6 text-xs text-slate-300">Game UI — در commit بعدی این بخش فعال می‌شود</p>
-                    <button class="mt-6 text-sm text-slate-400 underline" @click="logout">خروج از حساب</button>
-                </section>
+                <!-- محیط بازی -->
+                <template v-else>
+                    <GameStage
+                        :campaign="campaign"
+                        :remaining="remaining"
+                        @remaining="(v) => (remaining = v)"
+                        @played="(r) => (playResult = r)"
+                    />
+
+                    <div class="mt-4 flex justify-center gap-3">
+                        <button class="rounded-full bg-white/20 px-5 py-2.5 text-sm font-bold text-white backdrop-blur" @click="showRewards = true">
+                            🎁 جایزه‌های من
+                        </button>
+                        <button class="rounded-full bg-white/10 px-5 py-2.5 text-sm text-white/80" @click="logout">خروج</button>
+                    </div>
+                </template>
             </main>
         </template>
+
+        <!-- Overlay نتیجه -->
+        <ResultOverlay
+            v-if="playResult"
+            :data="playResult"
+            @close="playResult = null"
+        />
+
+        <!-- کیف جایزه‌ها -->
+        <RewardsSheet
+            v-if="showRewards && token"
+            :token="token"
+            @close="showRewards = false"
+        />
     </div>
 </template>

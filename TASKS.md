@@ -19,7 +19,7 @@
 | Sprint 5 | Analytics و Retention | ۲ هفته | ⬜ در انتظار | قیف، Referral، Daily Check-in، Streak |
 | Sprint 6 | امنیت و بتا | ۲ هفته | ⬜ در انتظار | ماتریس تست امنیتی، Audit، استقرار |
 
-**آخرین به‌روزرسانی:** ۲۰۲۶-۰۹-۱۷ — Sprint 4 (فرانت‌اند، قدم ۱): زیرساخت Vue 3 + Vite + فونت وزیرمتن، کلاینت API مشترک، App Shell و Service Worker PWA و شل ورود OTP
+**آخرین به‌روزرسانی:** ۲۰۲۶-۰۹-۱۷ — Sprint 4 (فرانت‌اند، قدم ۲): PWA مشتری کامل شد — هر ۱۰ بازی با Registry و lazy-load، Overlay نتیجه، کیف جایزه‌ها؛ تست E2E مرورگری سبز
 
 ---
 
@@ -140,8 +140,10 @@
 - [x] کلاینت مشترک API (`resources/shared/api.js`): مدیریت خطای استاندارد `error{code,message,fields}`، توکن مشتری به‌ازای هر کمپین در localStorage (جلوگیری از نشت توکن بین Storeها)، هدر Idempotency-Key
 - [x] App Shell PWA: `manifest.webmanifest` (RTL/فا/آیکون‌های ۱۹۲ و ۵۱۲ و maskable) + Service Worker سبک (cache-first برای شل و فونت‌ها؛ API هرگز کش نمی‌شود — نتایج بازی server-authoritative می‌مانند)
 - [x] Blade host `/c/{slug}` + شل PWA: بارگذاری کمپین، اعمال Theme کمپین (CSS Variables)، ورود موبایل+OTP با اعتبارسنجی سمت کلاینت
-- [ ] Frontend Registry و Lazy-load کامپوننت هر بازی (۱۰ بازی)
-- [ ] جریان کامل بازی: Stage بازی، Overlay نتیجه (برد/بی‌جایزه)، کیف جایزه‌ها (کوپن‌ها و امتیاز)
+- [x] Frontend Registry با `defineAsyncComponent` — هر ۱۰ بازی chunk جداگانه (~۱ تا ۱.۵KB gzip هرکدام) و main bundle فقط ~۳۲KB gzip (بودجه ۱۵۰KB)
+- [x] جریان کامل ۱۰ بازی: Wheel (چرخش conic-gradient با فرود روی segment سرور)، Dice، Scratch (آشکارسازی تدریجی کارت سرور)، PickBox/PickCard (برجسته‌سازی reveal_index)، LuckyTicket، Quiz (فرم چندسؤالی + تصحیح سرور)، Memory (board سرور + چرخش محلی)، Reaction (زمان‌سنجی محلی + قضاوت سرور)، Claw (حرکت به target_x/y سرور)
+- [x] Overlay نتیجه (برد: کد کوپن با کپی/امتیاز/هدیه با راهنما — بی‌جایزه: پیام محترمانه) + کیف جایزه‌ها (`/me/rewards`: کوپن‌ها با وضعیت و امتیاز Ledger)
+- [x] تست E2E مرورگری (Playwright): ورود OTP → Session → چرخش → برد ۵۰ امتیاز → Overlay → کیف جایزه‌ها (موجودی ۵۰ از Ledger) بدون خطای کنسول
 - [ ] پنل فروشگاه‌دار (Vue 3 + Tailwind): Wizard ساخت کمپین، Game Library با فرم پویا از JSON Schema، مدیریت جایزه
 - [ ] بودجه عملکرد: LCP < 2.5s، JS لندینگ < 150KB فشرده، TTI < 3s (Lighthouse CI)
 
