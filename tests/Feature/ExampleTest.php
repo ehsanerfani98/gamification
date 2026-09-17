@@ -2,18 +2,30 @@
 
 namespace Tests\Feature;
 
-// use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
+/**
+ * روت‌های وب — پنل و PWA (فصل ۹).
+ */
 class ExampleTest extends TestCase
 {
-    /**
-     * A basic test example.
-     */
-    public function test_the_application_returns_a_successful_response(): void
+    public function test_root_redirects_to_panel(): void
     {
-        $response = $this->get('/');
+        $this->get('/')->assertRedirect('/panel');
+    }
 
-        $response->assertStatus(200);
+    public function test_panel_host_renders(): void
+    {
+        $this->get('/panel')->assertOk()->assertSee('id="app"', false);
+    }
+
+    public function test_pwa_host_renders_for_valid_slug(): void
+    {
+        $this->get('/c/demo-campaign')->assertOk()->assertSee('id="app"', false);
+    }
+
+    public function test_pwa_host_rejects_invalid_slug(): void
+    {
+        $this->get('/c/INVALID!')->assertNotFound();
     }
 }

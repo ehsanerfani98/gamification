@@ -15,11 +15,11 @@
 | Sprint 1 | Identity و SaaS | ۲ هفته | ✅ تکمیل شد | OTP، Merchant/Store، Plan، Subscription، Feature Gating |
 | Sprint 2 | Game Engine | ۳ هفته | ✅ تکمیل شد | Contractها، Session سمت سرور، Lucky Wheel، ضدتقلب |
 | Sprint 3 | Reward و Coupon و Points | ۳ هفته | ✅ تکمیل شد | Resolver، Inventory، ۹ Issuer، Ledger امتیاز |
-| Sprint 4 | بازی‌ها و PWA | ۳ هفته | 🔄 در حال انجام | ✅ ۱۰ بازی پلاگین (بک‌اند) — ⬜ PWA و پنل Wizard |
+| Sprint 4 | بازی‌ها و PWA | ۳ هفته | ✅ تکمیل شد | ۱۰ بازی پلاگین + PWA مشتری + پنل فروشگاه‌دار با Wizard |
 | Sprint 5 | Analytics و Retention | ۲ هفته | ⬜ در انتظار | قیف، Referral، Daily Check-in، Streak |
 | Sprint 6 | امنیت و بتا | ۲ هفته | ⬜ در انتظار | ماتریس تست امنیتی، Audit، استقرار |
 
-**آخرین به‌روزرسانی:** ۲۰۲۶-۰۹-۱۷ — Sprint 4 (فرانت‌اند، قدم ۲): PWA مشتری کامل شد — هر ۱۰ بازی با Registry و lazy-load، Overlay نتیجه، کیف جایزه‌ها؛ تست E2E مرورگری سبز
+**آخرین به‌روزرسانی:** ۲۰۲۶-۰۹-۱۷ — Sprint 4 کامل شد (بک‌اند + فرانت‌اند): ۱۰ بازی پلاگین، PWA مشتری با ۱۰ UI بازی و پنل فروشگاه‌دار با Wizard فرم پویا؛ ۹۴ تست سبز (۲,۳۲۱ assertion) + رفع باگ import مدل Reward در RewardIssuerTypes (با تست رگرسیون)
 
 ---
 
@@ -124,7 +124,7 @@
 
 ---
 
-## Sprint 4 — بازی‌های باقیمانده و PWA 🔄
+## Sprint 4 — بازی‌ها، PWA و پنل فروشگاه‌دار ✅
 
 ### بخش اول: بازی‌ها (بک‌اند) ✅
 - [x] ۹ بازی باقیمانده به‌عنوان پلاگین مستقل `GameInterface`: Dice، Scratch Card، Pick a Box، Pick a Card، Lucky Ticket، Quiz، Memory، Reaction، Lucky Claw
@@ -135,7 +135,7 @@
 - [x] ثبت هر ۱۰ بازی در `config/games.php` + تست E2E ساخت → انتشار → بازی برای هر ده بازی روی Plan حرفه‌ای
 - [x] تست‌های Sprint 4 (۲۱ سناریو): Registry ده بازی، اعتبارسنجی Dice، تصحیح Quiz (برد/مردودی)، سازگاری کارت Scratch (۳۰۰ اجرا)، برجسته‌سازی Pick a Box (۲۰۰ اجرا)، کد بلیط Ticket، چیدمان دقیق board حافظه، جداسازی تصمیم Reaction، grabbed Claw، بی‌اثری ورودی دستکاری‌شده کلاینت — **مجموع ۸۷ تست سبز (۲,۲۹۳ assertion)**
 
-### بخش دوم: فرانت‌اند 🔄
+### بخش دوم: فرانت‌اند ✅
 - [x] زیرساخت Vite + Vue 3 + Tailwind 4 با فونت self-host وزیرمتن (۴ وزن woff2) و RTL موبایل‌اول
 - [x] کلاینت مشترک API (`resources/shared/api.js`): مدیریت خطای استاندارد `error{code,message,fields}`، توکن مشتری به‌ازای هر کمپین در localStorage (جلوگیری از نشت توکن بین Storeها)، هدر Idempotency-Key
 - [x] App Shell PWA: `manifest.webmanifest` (RTL/فا/آیکون‌های ۱۹۲ و ۵۱۲ و maskable) + Service Worker سبک (cache-first برای شل و فونت‌ها؛ API هرگز کش نمی‌شود — نتایج بازی server-authoritative می‌مانند)
@@ -144,10 +144,10 @@
 - [x] جریان کامل ۱۰ بازی: Wheel (چرخش conic-gradient با فرود روی segment سرور)، Dice، Scratch (آشکارسازی تدریجی کارت سرور)، PickBox/PickCard (برجسته‌سازی reveal_index)، LuckyTicket، Quiz (فرم چندسؤالی + تصحیح سرور)، Memory (board سرور + چرخش محلی)، Reaction (زمان‌سنجی محلی + قضاوت سرور)، Claw (حرکت به target_x/y سرور)
 - [x] Overlay نتیجه (برد: کد کوپن با کپی/امتیاز/هدیه با راهنما — بی‌جایزه: پیام محترمانه) + کیف جایزه‌ها (`/me/rewards`: کوپن‌ها با وضعیت و امتیاز Ledger)
 - [x] تست E2E مرورگری (Playwright): ورود OTP → Session → چرخش → برد ۵۰ امتیاز → Overlay → کیف جایزه‌ها (موجودی ۵۰ از Ledger) بدون خطای کنسول
-- [ ] پنل فروشگاه‌دار (Vue 3 + Tailwind): Wizard ساخت کمپین، Game Library با فرم پویا از JSON Schema، مدیریت جایزه
+- [x] پنل فروشگاه‌دار (Vue 3 + Tailwind، hash-router): ورود OTP، انتخاب Store با `X-Store-Id`، داشبورد، کتابخانه بازی با نشان Plan و مشاهده Schema، Wizard دو مرحله‌ای ساخت کمپین (مشخصات → فرم پویا از JSON Schema)، صفحه جزئیات کمپین (ویرایش پیکربندی، تعریف ۹ نوع جایزه با موجودی، انتشار و کپی لینک عمومی)، ثبت استفاده کوپن، اشتراک و Plan
 - [ ] بودجه عملکرد: LCP < 2.5s، JS لندینگ < 150KB فشرده، TTI < 3s (Lighthouse CI)
 
-**Definition of Done:** ۱۰ بازی روی Game Engine + اجرا در WebView اینستاگرام
+**Definition of Done:** ۱۰ بازی روی Game Engine + اجرا در WebView اینستاگرام → **بخش PWA تأیید شد با تست E2E مرورگری (OTP → Session → چرخش → برد امتیاز → کیف جایزه‌ها) و جریان کامل پنل (OTP → Wizard → جایزه → انتشار)**
 
 ## Sprint 5 — Analytics و Retention ⬜
 

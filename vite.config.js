@@ -6,8 +6,7 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
     plugins: [
         laravel({
-            // Sprint 4 — ورودی PWA مشتری؛ ورودی پنل در Commit 3 اضافه می‌شود
-            input: ['resources/pwa/main.js'],
+            input: ['resources/pwa/main.js', 'resources/panel/main.js'],
             refresh: true,
         }),
         vue(),

@@ -2,6 +2,8 @@
 
 namespace App\Support;
 
+use App\Models\Reward;
+
 /**
  * فهرست ۹ نوع جایزه MVP — فصل ۶-۲ سند معماری.
  * افزودن نوع جدید: کلاس Issuer + یک خط در RewardIssuerRegistry.

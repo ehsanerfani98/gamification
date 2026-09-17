@@ -38,8 +38,8 @@ export function setToken(slug, token) {
     }
 }
 
-export async function api(path, { method = 'GET', body, token, idempotencyKey } = {}) {
-    const headers = { Accept: 'application/json' };
+export async function api(path, { method = 'GET', body, token, idempotencyKey, headers: extraHeaders } = {}) {
+    const headers = { Accept: 'application/json', ...extraHeaders };
     if (body !== undefined) headers['Content-Type'] = 'application/json';
     if (token) headers.Authorization = `Bearer ${token}`;
     if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey;
