@@ -19,7 +19,7 @@
 | Sprint 5 | Analytics و Retention | ۲ هفته | ⬜ در انتظار | قیف، Referral، Daily Check-in، Streak |
 | Sprint 6 | امنیت و بتا | ۲ هفته | ⬜ در انتظار | ماتریس تست امنیتی، Audit، استقرار |
 
-**آخرین به‌روزرسانی:** ۲۰۲۶-۰۹-۱۷ — Sprint 4 (بخش بک‌اند): هر ۱۰ بازی MVP به‌صورت پلاگین کامل شد؛ ۸۷ تست سبز (۲,۲۹۳ assertion)
+**آخرین به‌روزرسانی:** ۲۰۲۶-۰۹-۱۷ — Sprint 4 (فرانت‌اند، قدم ۱): زیرساخت Vue 3 + Vite + فونت وزیرمتن، کلاینت API مشترک، App Shell و Service Worker PWA و شل ورود OTP
 
 ---
 
@@ -135,10 +135,14 @@
 - [x] ثبت هر ۱۰ بازی در `config/games.php` + تست E2E ساخت → انتشار → بازی برای هر ده بازی روی Plan حرفه‌ای
 - [x] تست‌های Sprint 4 (۲۱ سناریو): Registry ده بازی، اعتبارسنجی Dice، تصحیح Quiz (برد/مردودی)، سازگاری کارت Scratch (۳۰۰ اجرا)، برجسته‌سازی Pick a Box (۲۰۰ اجرا)، کد بلیط Ticket، چیدمان دقیق board حافظه، جداسازی تصمیم Reaction، grabbed Claw، بی‌اثری ورودی دستکاری‌شده کلاینت — **مجموع ۸۷ تست سبز (۲,۲۹۳ assertion)**
 
-### بخش دوم: فرانت‌اند ⬜
-- [ ] Frontend Registry و Lazy-load کامپوننت هر بازی
-- [ ] PWA کمپین (مشتری): Alpine/Vue سبک، RTL موبایل‌اول، App Shell + Service Worker، صفحه آفلاین
-- [ ] پنل فروشگاه‌دار (Vue 3 + Tailwind): Wizard شش‌مرحله‌ای ساخت کمپین، Game Library، مدیریت جایزه
+### بخش دوم: فرانت‌اند 🔄
+- [x] زیرساخت Vite + Vue 3 + Tailwind 4 با فونت self-host وزیرمتن (۴ وزن woff2) و RTL موبایل‌اول
+- [x] کلاینت مشترک API (`resources/shared/api.js`): مدیریت خطای استاندارد `error{code,message,fields}`، توکن مشتری به‌ازای هر کمپین در localStorage (جلوگیری از نشت توکن بین Storeها)، هدر Idempotency-Key
+- [x] App Shell PWA: `manifest.webmanifest` (RTL/فا/آیکون‌های ۱۹۲ و ۵۱۲ و maskable) + Service Worker سبک (cache-first برای شل و فونت‌ها؛ API هرگز کش نمی‌شود — نتایج بازی server-authoritative می‌مانند)
+- [x] Blade host `/c/{slug}` + شل PWA: بارگذاری کمپین، اعمال Theme کمپین (CSS Variables)، ورود موبایل+OTP با اعتبارسنجی سمت کلاینت
+- [ ] Frontend Registry و Lazy-load کامپوننت هر بازی (۱۰ بازی)
+- [ ] جریان کامل بازی: Stage بازی، Overlay نتیجه (برد/بی‌جایزه)، کیف جایزه‌ها (کوپن‌ها و امتیاز)
+- [ ] پنل فروشگاه‌دار (Vue 3 + Tailwind): Wizard ساخت کمپین، Game Library با فرم پویا از JSON Schema، مدیریت جایزه
 - [ ] بودجه عملکرد: LCP < 2.5s، JS لندینگ < 150KB فشرده، TTI < 3s (Lighthouse CI)
 
 **Definition of Done:** ۱۰ بازی روی Game Engine + اجرا در WebView اینستاگرام
