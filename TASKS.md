@@ -164,4 +164,7 @@
 
 | Sprint | Commit | شرح | تاریخ |
 |--------|--------|------|-------|
-| 0 | — | اسکلت Laravel 13 + ساختار Domain + قراردادها + CI + TASKS.md | 2026-09-17 |
+| 0 | `fd7ca08` | اسکلت Laravel 13 + ساختار Domain + قراردادها + TASKS.md | 2026-09-17 |
+| 1 | `4dbec8e` | Identity و SaaS: OTP، Store، Plan، Subscription، FeatureGate (۳۱ تست) | 2026-09-17 |
+| 2 | `a991122` | Campaign + Game Engine: Session سمت سرور، Wheel، ضدتقلب (۵۰ تست) | 2026-09-17 |
+| 3 | `ae752a3` | Reward Engine + Coupon + Points Ledger (۶۶ تست) | 2026-09-17 |
