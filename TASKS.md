@@ -177,3 +177,6 @@
 | 1 | `4dbec8e` | Identity و SaaS: OTP، Store، Plan، Subscription، FeatureGate (۳۱ تست) | 2026-09-17 |
 | 2 | `a991122` | Campaign + Game Engine: Session سمت سرور، Wheel، ضدتقلب (۵۰ تست) | 2026-09-17 |
 | 3 | `ae752a3` | Reward Engine + Coupon + Points Ledger (۶۶ تست) | 2026-09-17 |
+| ci | `323ebcf` | فعال‌سازی GitHub Actions (Pint + تست روی PHP 8.4) پس از مجوز workflow scope | 2026-09-17 |
+| 4 | `388fe98` | هر ۱۰ بازی MVP به‌صورت پلاگین + toPublicArray بازگشتی (۸۷ تست) | 2026-09-17 |
+| ci | `fc4074c` | رفع CI: ساخت .env و APP_KEY پیش از تست (حذف warning dotenv و MissingAppKey) | 2026-09-17 |
