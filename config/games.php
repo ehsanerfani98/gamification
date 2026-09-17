@@ -1,5 +1,14 @@
 <?php
 
+use App\Domain\Game\Plugins\Dice\DiceGame;
+use App\Domain\Game\Plugins\LuckyClaw\LuckyClawGame;
+use App\Domain\Game\Plugins\LuckyTicket\LuckyTicketGame;
+use App\Domain\Game\Plugins\Memory\MemoryGame;
+use App\Domain\Game\Plugins\PickBox\PickBoxGame;
+use App\Domain\Game\Plugins\PickCard\PickCardGame;
+use App\Domain\Game\Plugins\Quiz\QuizGame;
+use App\Domain\Game\Plugins\Reaction\ReactionGame;
+use App\Domain\Game\Plugins\Scratch\ScratchGame;
 use App\Domain\Game\Plugins\Wheel\WheelGame;
 
 // Game Registry — نگاشت «کد بازی» به «کلاس پلاگین» (فصل ۵-۱ سند معماری)
@@ -10,21 +19,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | پلاگین‌های فعال
+    | پلاگین‌های فعال — هر ۱۰ بازی MVP (فصل ۱-۴ سند معماری)
     |--------------------------------------------------------------------------
     | کد بازی (همان کد جدول games) => کلاس پیاده‌کننده GameInterface
     */
     'plugins' => [
         'wheel' => WheelGame::class,
-        // 'dice'         => \App\Domain\Game\Plugins\Dice\DiceGame::class,
-        // 'scratch'      => \App\Domain\Game\Plugins\Scratch\ScratchGame::class,
-        // 'pick-box'     => \App\Domain\Game\Plugins\PickBox\PickBoxGame::class,
-        // 'pick-card'    => \App\Domain\Game\Plugins\PickCard\PickCardGame::class,
-        // 'lucky-ticket' => \App\Domain\Game\Plugins\LuckyTicket\LuckyTicketGame::class,
-        // 'quiz'         => \App\Domain\Game\Plugins\Quiz\QuizGame::class,
-        // 'memory'       => \App\Domain\Game\Plugins\Memory\MemoryGame::class,
-        // 'reaction'     => \App\Domain\Game\Plugins\Reaction\ReactionGame::class,
-        // 'claw'         => \App\Domain\Game\Plugins\LuckyClaw\LuckyClawGame::class,
+        'dice' => DiceGame::class,
+        'scratch' => ScratchGame::class,
+        'pick-box' => PickBoxGame::class,
+        'pick-card' => PickCardGame::class,
+        'lucky-ticket' => LuckyTicketGame::class,
+        'quiz' => QuizGame::class,
+        'memory' => MemoryGame::class,
+        'reaction' => ReactionGame::class,
+        'claw' => LuckyClawGame::class,
     ],
 
     /*

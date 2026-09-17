@@ -190,7 +190,8 @@ final class GameSessionTest extends TestCase
     public function test_registry_maps_wheel_plugin(): void
     {
         $this->assertTrue(GameRegistry::has('wheel'));
-        $this->assertFalse(GameRegistry::has('dice')); // هنوز پیاده نشده
+        // کد ثبت‌نشده در config/games.php → یافت نشد (Sprint 4: هر ۱۰ بازی ثبت شده‌اند)
+        $this->assertFalse(GameRegistry::has('nonexistent-game'));
         $this->assertSame('wheel', GameRegistry::for('wheel')::metadata()->code);
     }
 }

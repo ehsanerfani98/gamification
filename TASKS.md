@@ -15,11 +15,11 @@
 | Sprint 1 | Identity و SaaS | ۲ هفته | ✅ تکمیل شد | OTP، Merchant/Store، Plan، Subscription، Feature Gating |
 | Sprint 2 | Game Engine | ۳ هفته | ✅ تکمیل شد | Contractها، Session سمت سرور، Lucky Wheel، ضدتقلب |
 | Sprint 3 | Reward و Coupon و Points | ۳ هفته | ✅ تکمیل شد | Resolver، Inventory، ۹ Issuer، Ledger امتیاز |
-| Sprint 4 | بازی‌ها و PWA | ۳ هفته | ⬜ در انتظار | ۹ بازی باقیمانده + PWA + پنل Wizard |
+| Sprint 4 | بازی‌ها و PWA | ۳ هفته | 🔄 در حال انجام | ✅ ۱۰ بازی پلاگین (بک‌اند) — ⬜ PWA و پنل Wizard |
 | Sprint 5 | Analytics و Retention | ۲ هفته | ⬜ در انتظار | قیف، Referral، Daily Check-in، Streak |
 | Sprint 6 | امنیت و بتا | ۲ هفته | ⬜ در انتظار | ماتریس تست امنیتی، Audit، استقرار |
 
-**آخرین به‌روزرسانی:** ۲۰۲۶-۰۹-۱۷ — پایان Sprint 3 (Reward Engine کامل شد؛ ۶۶ تست سبز)
+**آخرین به‌روزرسانی:** ۲۰۲۶-۰۹-۱۷ — Sprint 4 (بخش بک‌اند): هر ۱۰ بازی MVP به‌صورت پلاگین کامل شد؛ ۸۷ تست سبز (۲,۲۹۳ assertion)
 
 ---
 
@@ -124,9 +124,18 @@
 
 ---
 
-## Sprint 4## Sprint 4 — بازی‌های باقیمانده و PWA ⬜
+## Sprint 4 — بازی‌های باقیمانده و PWA 🔄
 
-- [ ] ۹ بازی باقیمانده به‌عنوان پلاگین مستقل: Dice، Scratch Card، Pick a Box، Pick a Card، Lucky Ticket، Quiz، Memory، Reaction، Lucky Claw
+### بخش اول: بازی‌ها (بک‌اند) ✅
+- [x] ۹ بازی باقیمانده به‌عنوان پلاگین مستقل `GameInterface`: Dice، Scratch Card، Pick a Box، Pick a Card، Lucky Ticket، Quiz، Memory، Reaction، Lucky Claw
+- [x] کلاس پشتیبان `WeightedOutcome` (الگوی نتیجه‌اول) + پایه انتزاعی `PickOutcomeGame` برای بازی‌های انتخابی — برد/باخت همیشه weighted RNG سمت سرور و ایندکس انتخابی کلاینت فقط نمایشی (clamp)
+- [x] Scratch: کارت کامل سمت سرور (نماد وزنی هر خانه با weighted RNG) + شرط حد نصاب (match_required) — سطح حمله ورودی کلاینت صفر
+- [x] Quiz: تصحیح کامل سمت سرور (Server-Side Grading) — کلید پاسخ (`correct_index`) هرگز در پیکربندی عمومی افشا نمی‌شود
+- [x] `toPublicArray` به حذف بازگشتی کلیدهای حساس (`weight` / `reward_ref` / `probability_mode` / `correct_index`) در هر عمق تبدیل شد — پوشش خودکار پلاگین‌های جدید بدون تغییر هسته (فصل ۸-۱)
+- [x] ثبت هر ۱۰ بازی در `config/games.php` + تست E2E ساخت → انتشار → بازی برای هر ده بازی روی Plan حرفه‌ای
+- [x] تست‌های Sprint 4 (۲۱ سناریو): Registry ده بازی، اعتبارسنجی Dice، تصحیح Quiz (برد/مردودی)، سازگاری کارت Scratch (۳۰۰ اجرا)، برجسته‌سازی Pick a Box (۲۰۰ اجرا)، کد بلیط Ticket، چیدمان دقیق board حافظه، جداسازی تصمیم Reaction، grabbed Claw، بی‌اثری ورودی دستکاری‌شده کلاینت — **مجموع ۸۷ تست سبز (۲,۲۹۳ assertion)**
+
+### بخش دوم: فرانت‌اند ⬜
 - [ ] Frontend Registry و Lazy-load کامپوننت هر بازی
 - [ ] PWA کمپین (مشتری): Alpine/Vue سبک، RTL موبایل‌اول، App Shell + Service Worker، صفحه آفلاین
 - [ ] پنل فروشگاه‌دار (Vue 3 + Tailwind): Wizard شش‌مرحله‌ای ساخت کمپین، Game Library، مدیریت جایزه
