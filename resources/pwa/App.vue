@@ -26,6 +26,8 @@ const token = computed(() => getToken(slug));
 const phone = ref('');
 const code = ref('');
 const otpSent = ref(false);
+// سندباکس پیامک: کد آزمایشی برگردانده‌شده از API (خالی در production)
+const debugCode = ref('');
 const sending = ref(false);
 const entering = ref(false);
 const gateError = ref('');
@@ -63,8 +65,10 @@ async function requestOtp() {
     gateError.value = '';
     sending.value = true;
     try {
-        await api(`/c/${slug}/otp`, { method: 'POST', body: { phone: phone.value.trim() } });
+        const data = await api(`/c/${slug}/otp`, { method: 'POST', body: { phone: phone.value.trim() } });
         otpSent.value = true;
+        // سندباکس پیامک (بتا): کد آزمایشی در پاسخ API نمایش داده می‌شود
+        debugCode.value = data?.debug_code || '';
     } catch (e) {
         gateError.value = e.message;
     } finally {
@@ -160,6 +164,10 @@ onMounted(loadCampaign);
                                 placeholder="------"
                                 class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-center text-2xl tracking-[0.5em] outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-200"
                             />
+                            <p v-if="debugCode" class="mt-2 rounded-xl bg-emerald-50 px-3 py-2 text-center text-sm text-emerald-700">
+                                🧪 سندباکس پیامک — کد آزمایشی:
+                                <button type="button" class="font-black tracking-widest underline" dir="ltr" @click="code = debugCode">{{ debugCode }}</button>
+                            </p>
                         </div>
 
                         <p v-if="gateError" class="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-600">{{ gateError }}</p>

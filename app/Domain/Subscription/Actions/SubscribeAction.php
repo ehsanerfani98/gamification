@@ -39,7 +39,8 @@ final class SubscribeAction
             $payment = $store->payments()->create([
                 'plan_id' => $plan->id,
                 'amount_irt' => $plan->price_irt,
-                'gateway' => config('gamification.payments.gateway', 'fake'),
+                // دروازه مؤثر (تنظیمات پنل مقدم بر env) — Sprint 9
+                'gateway' => rescue(fn () => app(SiteSettingsService::class)->paymentGateway(), config('gamification.payments.gateway', 'fake'), false),
                 'status' => Payment::STATUS_PENDING,
                 'meta' => [
                     'billing_period' => $plan->billing_period,

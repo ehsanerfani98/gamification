@@ -9,6 +9,8 @@ const code = ref('');
 const otpSent = ref(false);
 const busy = ref(false);
 const error = ref('');
+// سندباکس پیامک (بتا): کد در پاسخ API برمی‌گردد و مستقیماً نمایش داده می‌شود
+const debugCode = ref('');
 
 const phoneValid = computed(() => /^09\d{9}$/.test(phone.value.trim()));
 
@@ -17,8 +19,9 @@ async function requestOtp() {
     busy.value = true;
     error.value = '';
     try {
-        await api('/auth/otp/request', { method: 'POST', body: { phone: phone.value.trim(), purpose: 'auth' } });
+        const data = await api('/auth/otp/request', { method: 'POST', body: { phone: phone.value.trim(), purpose: 'auth' } });
         otpSent.value = true;
+        debugCode.value = data?.debug_code || '';
     } catch (e) {
         error.value = e instanceof ApiError ? e.message : 'خطا';
     } finally {
@@ -77,6 +80,10 @@ async function verify() {
                         placeholder="------"
                         class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-center text-2xl tracking-[0.5em] outline-none focus:border-violet-500"
                     />
+                    <p v-if="debugCode" class="mt-2 rounded-xl bg-emerald-50 px-3 py-2 text-center text-sm text-emerald-700">
+                        🧪 سندباکس پیامک فعال است — کد آزمایشی:
+                        <button type="button" class="font-black tracking-widest underline" dir="ltr" @click="code = debugCode">{{ debugCode }}</button>
+                    </p>
                 </div>
 
                 <p v-if="error" class="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-600">{{ error }}</p>

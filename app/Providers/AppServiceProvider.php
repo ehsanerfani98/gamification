@@ -37,9 +37,12 @@ use Illuminate\Support\ServiceProvider;
 class AppServiceProvider extends ServiceProvider
 {
     /**
-     * درایورهای تعویض‌پذیر Infrastructure — فصل ۲-۲ سند معماری (Sprint 7-8).
-     * انتخاب درایور با env: SMS_CHANNEL=log|ippanel و PAYMENT_GATEWAY=fake|zarinpal.
-     * سندباکس‌های تنظیمات سایت (بتای ۵ فروشگاه) مقدم بر env هستند — پیش‌فرض‌ها (log/fake) حفظ شده‌اند.
+     * درایورهای تعویض‌پذیر Infrastructure — فصل ۲-۲ سند معماری (Sprint 7-9).
+     *
+     * اولویت پیکربندی: سندباکس‌های تنظیمات سایت (فقط Admin) → مقادیر تنظیمات سایت
+     * (متغیرهای درایور قابل ویرایش از پنل — Sprint 9) → پیش‌فرض env/config.
+     * یعنی Admin می‌تواند بدون تغییر env، درایور و کلیدهای IPPanel/ZarinPal را
+     * از بخش تنظیمات پنل عوض کند؛ سندباکس‌ها همچنان بر همه چیز مقدم‌اند.
      */
     public function register(): void
     {
@@ -47,11 +50,14 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(SiteSettingsService::class);
 
         $this->app->bind(SmsChannel::class, function (): SmsChannel {
-            return match ((string) config('gamification.sms.channel', 'log')) {
+            // سندباکس پیامک: هیچ درایور واقعی بایند نمی‌شود (ارسال SMS کلاً Skip می‌شود)
+            $settings = app(SiteSettingsService::class);
+
+            return match ($settings->smsChannel()) {
                 'ippanel' => new IppanelSmsChannel(
-                    apiKey: (string) config('gamification.sms.ippanel.api_key'),
-                    originator: (string) config('gamification.sms.ippanel.originator'),
-                    baseUrl: (string) config('gamification.sms.ippanel.base_url', 'https://api2.ippanel.com'),
+                    apiKey: $settings->ippanelApiKey(),
+                    originator: $settings->ippanelOriginator(),
+                    baseUrl: $settings->ippanelBaseUrl(),
                     timeout: (int) config('gamification.sms.ippanel.timeout', 10),
                 ),
                 default => new LogSmsChannel,
@@ -59,23 +65,21 @@ class AppServiceProvider extends ServiceProvider
         });
 
         $this->app->bind(PaymentGateway::class, function (): PaymentGateway {
-            // سندباکس (تنظیمات سایت، فقط Admin) مقدم بر env — همان جریان کامل callback/verify بدون سرویس خارجی
-            try {
-                if (app(SiteSettingsService::class)->paymentSandboxEnabled()) {
-                    return new SandboxGateway;
-                }
-            } catch (\Throwable) {
-                // جدول تنظیمات هنوز مهاجرت نشده (مثلاً حین migrate) — ادامه با env
+            $settings = app(SiteSettingsService::class);
+
+            // سندباکس پرداخت (تنظیمات سایت، فقط Admin) مقدم بر همه — همان جریان کامل callback/verify بدون سرویس خارجی
+            if ($settings->paymentSandboxEnabled()) {
+                return new SandboxGateway;
             }
 
-            return match ((string) config('gamification.payments.gateway', 'fake')) {
+            return match ($settings->paymentGateway()) {
                 'zarinpal' => new ZarinpalGateway(
-                    merchantId: (string) config('gamification.payments.zarinpal.merchant_id'),
-                    callbackUrl: (string) config('gamification.payments.zarinpal.callback_url')
-                        ?: url('/api/v1/payments/zarinpal/callback'),
-                    baseUrl: (string) config('gamification.payments.zarinpal.base_url', 'https://payment.zarinpal.com'),
-                    tomanToRial: (bool) config('gamification.payments.zarinpal.toman_to_rial', true),
-                    description: (string) config('gamification.payments.zarinpal.description', 'خرید اشتراک پلتفرم گیمیفیکیشن'),
+                    merchantId: $settings->zarinpalMerchantId(),
+                    callbackUrl: $settings->zarinpalCallbackUrl(),
+                    // سندباکس رسمی خود زرین‌پال: sandbox.zarinpal.com (همان API v4) — Sprint 9
+                    baseUrl: $settings->zarinpalBaseUrl(),
+                    tomanToRial: $settings->zarinpalTomanToRial(),
+                    description: $settings->zarinpalDescription(),
                 ),
                 default => new FakeGateway,
             };
