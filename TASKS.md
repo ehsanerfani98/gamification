@@ -17,9 +17,10 @@
 | Sprint 3 | Reward و Coupon و Points | ۳ هفته | ✅ تکمیل شد | Resolver، Inventory، ۹ Issuer، Ledger امتیاز |
 | Sprint 4 | بازی‌ها و PWA | ۳ هفته | ✅ تکمیل شد | ۱۰ بازی پلاگین + PWA مشتری + پنل فروشگاه‌دار با Wizard |
 | Sprint 5 | Analytics و Retention | ۲ هفته | ✅ تکمیل شد | قیف، Endpoint گزارش، Referral پله‌ای، Check-in/Streak، تجمیع شبانه |
-| Sprint 6 | امنیت و بتا | ۲ هفته | 🔶 تکمیل شد (سهم کد) | Audit کامل، ماتریس ۷ حمله، Scheduler، بکاپ، راهنمای استقرار |
+| Sprint 6 | امنیت و بتا | ۲ هفته | ✅ تکمیل شد | Audit کامل، ماتریس ۷ حمله، Scheduler، بکاپ، راهنمای استقرار |
+| Sprint 7 | یکپارچه‌سازی سرویس‌های واقعی | ۱ هفته | ✅ تکمیل شد | درایور IPPanel (پیامک OTP) + دروازه ZarinPal (API v4) + callback مرورگر |
 
-**آخرین به‌روزرسانی:** ۲۰۲۶-۰۹-۱۸ — Sprint 6 کامل شد (سهم کد): Audit کامل رخدادهای حساس، ماتریس تست امنیتی (۷ سناریو)، Scheduler (بستن کمپین منقضی، انقضای Session)، دستور بکاپ، راهنمای استقرار؛ **۱۲۷ تست سبز (۲,۵۹۸ assertion)** — دو تصمیم باز (درایور واقعی پیامک/پرداخت) پیش از بتا نهایی می‌شود
+**آخرین به‌روزرسانی:** ۲۰۲۶-۰۹-۱۸ — Sprint 7 کامل شد: درایور پیامک **IPPanel** و دروازه پرداخت **ZarinPal (API v4)** با انتخاب کاربر؛ بایند پویا با env، callback مرورگر با ریدایرکت به پنل، رفع باگ رگرسیون Audit دعوت؛ **۱۴۷ تست سبز (۲,۶۷۲ assertion)** — مانده: بتای ۵ فروشگاه پس از استقرار
 
 ---
 
@@ -183,8 +184,30 @@
   ۱) Replay (SESSION_CONSUMED) ۲) دستکاری Payload کلاینت (نتیجه فقط سمت سرور) ۳) امضای HMAC (باطل‌سازی دستکاری) ۴) Brute Force OTP (Rate Limit + قفل تلاش + Audit) ۵) Cross-Tenant (404 بدون افشا روی ۵ Endpoint) ۶) بالا رفتن سطح دسترسی (توکن مشتری/فروشگاه‌دار/ناشناس) ۷) حدس کوپن (نبود نشت اطلاعات + تک‌مصرف اتمی)
 - [x] Scheduler: بستن کمپین منقضی (`campaigns:close-expired` هر ۱۰ دقیقه)، انقضای Session (`sessions:expire` هر ۵ دقیقه) — هر دو Idempotent با ریست TenantContext (قرعه‌کشی زمان‌دار پس از تعریف نوع بازی قرعه — خارج از MVP)
 - [x] آماده‌سازی استقرار: دستور `database:backup` (VACUUM INTO، نگه‌داری ۱۴ نسخه، زمان‌بندی ۰۴:۰۰)، QUEUE_CONNECTION=database، راهنمای کامل استقرار در README (cache، worker صف، cron)
-- [ ] درایور پیامک واقعی + دروازه پرداخت واقعی — 🔒 تصمیم باز (انتخاب سرویس‌دهنده با کاربر؛ قراردادها آماده در `app/Infrastructure/*`)
-- [ ] بتای ۵ فروشگاه — پس از نهایی شدن دو تصمیم بالا و استقرار روی سرور تولیدی
+- [x] ~~درایور پیامک واقعی + دروازه پرداخت واقعی~~ — ✅ در Sprint 7 انجام شد (IPPanel + ZarinPal با انتخاب کاربر)
+- [ ] بتای ۵ فروشگاه — پس از استقرار روی سرور تولیدی
+
+---
+
+## Sprint 7 — یکپارچه‌سازی سرویس‌های واقعی ✅ (IPPanel + ZarinPal — انتخاب کاربر)
+
+### پیامک OTP با IPPanel (فراز اس‌ام‌اس)
+- [x] درایور `IppanelSmsChannel` روی قرارداد موجود `SmsChannel` — بدون تغییر در Actionها
+  - REST `POST /api/v1/sms/send/webservice/single` با هدر `apikey` (base_url قابل پیکربندی)
+  - Exception در خطا → صف `SendSmsJob` با tries=3 و backoff پلکانی (۵/۳۰/۱۲۰ ثانیه) Retry می‌کند
+- [x] بایند پویا با env: `SMS_CHANNEL=log|ippanel` — رفتار پیش‌فرض (log) حفظ شد
+- [x] پیکربندی: `IPANEL_API_KEY`، `IPANEL_ORIGINATOR`، `IPANEL_BASE_URL`
+### پرداخت اشتراک با ZarinPal (API v4)
+- [x] درایور `ZarinpalGateway` روی قرارداد موجود `PaymentGateway` — بدون تغییر در Actionها
+  - `request()`: `POST /pg/v4/payment/request.json` → Authority + URL پرداخت `StartPay`
+  - `verify()`: `POST /pg/v4/payment/verify.json` — تأیید فقط سمت سرور؛ کد ۱۰۱ (قبلاً تأیید) Idempotent موفق
+  - دفاع‌ها: تطبیق Authority با reference رکورد (hash_equals)، رد NOK بدون تماس API، تبدیل تومان→ریال (قابل غیرفعال‌سازی)
+- [x] `GET /api/v1/payments/zarinpal/callback` — بازگشت مرورگر از دروازه؛ ریدایرکت به پنل با `payment=paid|failed`
+- [x] بایند پویا با env: `PAYMENT_GATEWAY=fake|zarinpal` + پیکربندی `ZARINPAL_*`
+- [x] Idempotency کامل callback (پرداخت تکراری → فقط یک اشتراک و یک فاکتور)
+### رفع باگ و پایداری
+- [x] رفع باگ رگرسیون: Listener `AuditReferralReward` بدون `use` ثبت شده بود و هرگز فعال نمی‌شد (+ تست رگرسیون `ReferralAuditTest`)
+- [x] تست‌ها (۲۰ سناریوی جدید): بایند پویا، صحت Endpoint/Payload، خطای IPPanel برای Retry صف، Request/Verify زرین‌پال، دفاع Authority نامطبق، NOK بدون تماس، جریان E2E پرداخت، Idempotency callback، Authority ناشناس، خطای وریفای — **مجموع ۱۴۷ تست سبز (۲,۶۷۲ assertion)**
 
 ---
 
@@ -192,8 +215,8 @@
 
 | تصمیم | وضعیت | توضیح |
 |--------|--------|-------|
-| سرویس پیامک OTP | ⬜ باز | Contract آماده در `app/Infrastructure/Sms` — فعلاً LogSmsChannel (کد در لاگ) |
-| دروازه پرداخت | ⬜ باز | Contract آماده در `app/Infrastructure/Payment` — فعلاً FakeGateway |
+| سرویس پیامک OTP | ✅ نهایی شد — **IPPanel** | درایور `IppanelSmsChannel` آماده؛ فعال‌سازی با `SMS_CHANNEL=ippanel` + کلید API |
+| دروازه پرداخت | ✅ نهایی شد — **ZarinPal** | درایور `ZarinpalGateway` آماده؛ فعال‌سازی با `PAYMENT_GATEWAY=zarinpal` + Merchant ID |
 | سقف‌های عددی Planها | ⬜ باز | پیش‌فرض Seeder مطابق جدول فصل ۷ سند معماری |
 
 ## 📝 گزارش تغییرات Git

@@ -13,11 +13,14 @@ use App\Domain\Coupon\Events\CouponRedeemed;
 use App\Domain\Customer\Events\CustomerEnteredCampaign;
 use App\Domain\Game\Events\GamePlayed;
 use App\Domain\Referral\Events\ReferralRegistered;
+use App\Domain\Referral\Events\ReferralRewardGranted;
 use App\Domain\Retention\Events\CustomerCheckedIn;
 use App\Domain\Reward\Events\RewardIssued;
 use App\Domain\Subscription\Events\SubscriptionChanged;
 use App\Infrastructure\Payment\Drivers\FakeGateway;
+use App\Infrastructure\Payment\Drivers\ZarinpalGateway;
 use App\Infrastructure\Payment\PaymentGateway;
+use App\Infrastructure\Sms\Drivers\IppanelSmsChannel;
 use App\Infrastructure\Sms\Drivers\LogSmsChannel;
 use App\Infrastructure\Sms\SmsChannel;
 use App\Support\Audit\Listeners\AuditReferralReward;
@@ -32,13 +35,38 @@ use Illuminate\Support\ServiceProvider;
 class AppServiceProvider extends ServiceProvider
 {
     /**
-     * درایورهای تعویض‌پذیر Infrastructure — فصل ۲-۲ سند معماری.
-     * تغییر سرویس پیامک/پرداخت فقط با تغییر env و اضافه‌کردن یک Driver جدید.
+     * درایورهای تعویض‌پذیر Infrastructure — فصل ۲-۲ سند معماری (Sprint 7).
+     * انتخاب درایور با env: SMS_CHANNEL=log|ippanel و PAYMENT_GATEWAY=fake|zarinpal.
+     * پیش‌فرض‌ها (log/fake) رفتار قبلی را حفظ می‌کنند — بدون env واقعی نیز تست‌ها سبز می‌مانند.
      */
-    public array $bindings = [
-        SmsChannel::class => LogSmsChannel::class,
-        PaymentGateway::class => FakeGateway::class,
-    ];
+    public function register(): void
+    {
+        $this->app->bind(SmsChannel::class, function (): SmsChannel {
+            return match ((string) config('gamification.sms.channel', 'log')) {
+                'ippanel' => new IppanelSmsChannel(
+                    apiKey: (string) config('gamification.sms.ippanel.api_key'),
+                    originator: (string) config('gamification.sms.ippanel.originator'),
+                    baseUrl: (string) config('gamification.sms.ippanel.base_url', 'https://api2.ippanel.com'),
+                    timeout: (int) config('gamification.sms.ippanel.timeout', 10),
+                ),
+                default => new LogSmsChannel,
+            };
+        });
+
+        $this->app->bind(PaymentGateway::class, function (): PaymentGateway {
+            return match ((string) config('gamification.payments.gateway', 'fake')) {
+                'zarinpal' => new ZarinpalGateway(
+                    merchantId: (string) config('gamification.payments.zarinpal.merchant_id'),
+                    callbackUrl: (string) config('gamification.payments.zarinpal.callback_url')
+                        ?: url('/api/v1/payments/zarinpal/callback'),
+                    baseUrl: (string) config('gamification.payments.zarinpal.base_url', 'https://payment.zarinpal.com'),
+                    tomanToRial: (bool) config('gamification.payments.zarinpal.toman_to_rial', true),
+                    description: (string) config('gamification.payments.zarinpal.description', 'خرید اشتراک پلتفرم گیمیفیکیشن'),
+                ),
+                default => new FakeGateway,
+            };
+        });
+    }
 
     /**
      * Bootstrap any application services.

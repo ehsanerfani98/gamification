@@ -53,11 +53,41 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | پیامک — درایور تعویض‌پذیر (فصل ۲-۲ و ۱۰-۳)
+    |--------------------------------------------------------------------------
+    | SMS_CHANNEL=log     → درایور لاگ (توسعه/تست؛ کد OTP در لاگ)
+    | SMS_CHANNEL=ippanel → سرویس IPPanel (فراز اس‌ام‌اس) — انتخاب کاربر، Sprint 7
+    */
+    'sms' => [
+        'channel' => env('SMS_CHANNEL', 'log'),
+        'ippanel' => [
+            'api_key' => env('IPANEL_API_KEY', ''),
+            'originator' => env('IPANEL_ORIGINATOR', ''),
+            'base_url' => env('IPANEL_BASE_URL', 'https://api2.ippanel.com'),
+            'timeout' => env('IPANEL_TIMEOUT', 10),
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | پرداخت — دروازه تعویض‌پذیر (فصل ۷-۳)
     |--------------------------------------------------------------------------
+    | PAYMENT_GATEWAY=fake     → دروازه آزمایشی (MVP/تست)
+    | PAYMENT_GATEWAY=zarinpal → دروازه ZarinPal (انتخاب کاربر، Sprint 7)
     */
     'payments' => [
         'gateway' => env('PAYMENT_GATEWAY', 'fake'), // fake | zarinpal | ...
+        'zarinpal' => [
+            'merchant_id' => env('ZARINPAL_MERCHANT_ID', ''),
+            'base_url' => env('ZARINPAL_BASE_URL', 'https://payment.zarinpal.com'),
+            // مبالغ سیستم تومان است و ZarinPal ریال می‌پذیرد → تبدیل ×۱۰
+            'toman_to_rial' => env('ZARINPAL_TOMAN_TO_RIAL', true),
+            // خالی → پیش‌فرض route() ویرچوال پرداخت استفاده می‌شود
+            'callback_url' => env('ZARINPAL_CALLBACK_URL', ''),
+            'description' => env('ZARINPAL_DESCRIPTION', 'خرید اشتراک پلتفرم گیمیفیکیشن'),
+            // مقصد بازگشت مرورگر پس از callback (روت hash پنل)
+            'panel_return_url' => env('ZARINPAL_PANEL_RETURN_URL', '/panel#/subscription'),
+        ],
     ],
 
     /*

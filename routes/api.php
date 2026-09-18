@@ -76,6 +76,11 @@ Route::prefix('v1')->group(function (): void {
     Route::post('payments/callback', [PaymentController::class, 'callback'])
         ->middleware('throttle:payments');
 
+    // بازگشت مرورگر از دروازه ZarinPal — Sprint 7 (تأیید نهایی سمت سرور با API وریفای)
+    Route::get('payments/zarinpal/callback', [PaymentController::class, 'zarinpalCallback'])
+        ->name('payments.zarinpal.callback')
+        ->middleware('throttle:payments');
+
     // ── مسیرهای عمومی PWA کمپین (فصل ۹) ──────────────────────────
     Route::get('c/{slug}', [CampaignPublicController::class, 'show']);
     Route::post('c/{slug}/otp', [CampaignPublicController::class, 'otp'])
