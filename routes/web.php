@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Payment;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -13,3 +14,14 @@ Route::get('/c/{slug}', function (string $slug) {
 
 /** پنل فروشگاه‌دار — Vue SPA با hash router */
 Route::get('/panel', fn () => view('panel'));
+
+/**
+ * صفحه پرداخت آزمایشی سندباکس — Sprint 8 (بتای ۵ فروشگاه).
+ * فقط وقتی SandboxGateway فعال است به اینجا ریدایرکت می‌شود؛
+ * Authority در query و reference رکورد یکسان‌اند (capability).
+ */
+Route::get('/payments/sandbox/{payment}', function (Payment $payment) {
+    $payment->load(['plan', 'store']);
+
+    return view('payments.sandbox', ['payment' => $payment]);
+})->whereNumber('payment')->middleware('throttle:payments');

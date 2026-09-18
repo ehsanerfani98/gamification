@@ -11,6 +11,7 @@ import CampaignsView from './views/CampaignsView.vue';
 import CampaignDetailView from './views/CampaignDetailView.vue';
 import CouponsView from './views/CouponsView.vue';
 import SubscriptionView from './views/SubscriptionView.vue';
+import SiteSettingsView from './views/SiteSettingsView.vue';
 
 const router = createRouter({
     history: createWebHashHistory('/panel'),
@@ -23,6 +24,7 @@ const router = createRouter({
         { path: '/campaigns/:id', component: CampaignDetailView, props: true },
         { path: '/coupons', component: CouponsView },
         { path: '/subscription', component: SubscriptionView },
+        { path: '/site-settings', component: SiteSettingsView, meta: { admin: true } },
     ],
 });
 
@@ -30,6 +32,8 @@ router.beforeEach((to) => {
     const token = localStorage.getItem('gm:panel:token');
     if (!to.meta.public && !token) return '/login';
     if (to.path === '/login' && token) return '/';
+    // بخش تنظیمات سایت فقط برای Admin (Sprint 8)
+    if (to.meta.admin && localStorage.getItem('gm:panel:role') !== 'admin') return '/';
 });
 
 createApp(App).use(router).mount('#app');

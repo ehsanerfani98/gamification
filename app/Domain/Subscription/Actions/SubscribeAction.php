@@ -9,6 +9,7 @@ use App\Models\Payment;
 use App\Models\Plan;
 use App\Models\Store;
 use App\Models\Subscription;
+use App\Support\Settings\SiteSettingsService;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -40,7 +41,11 @@ final class SubscribeAction
                 'amount_irt' => $plan->price_irt,
                 'gateway' => config('gamification.payments.gateway', 'fake'),
                 'status' => Payment::STATUS_PENDING,
-                'meta' => ['billing_period' => $plan->billing_period],
+                'meta' => [
+                    'billing_period' => $plan->billing_period,
+                    // رد سندباکس برای Audit — پرداخت آزمایشی وجهی جابه‌جا نمی‌کند (Sprint 8)
+                    'sandbox' => rescue(fn () => app(SiteSettingsService::class)->paymentSandboxEnabled(), false, false),
+                ],
             ]);
 
             $payload = $this->gateway->request($payment);

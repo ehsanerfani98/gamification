@@ -18,6 +18,7 @@ use App\Domain\Retention\Events\CustomerCheckedIn;
 use App\Domain\Reward\Events\RewardIssued;
 use App\Domain\Subscription\Events\SubscriptionChanged;
 use App\Infrastructure\Payment\Drivers\FakeGateway;
+use App\Infrastructure\Payment\Drivers\SandboxGateway;
 use App\Infrastructure\Payment\Drivers\ZarinpalGateway;
 use App\Infrastructure\Payment\PaymentGateway;
 use App\Infrastructure\Sms\Drivers\IppanelSmsChannel;
@@ -26,6 +27,7 @@ use App\Infrastructure\Sms\SmsChannel;
 use App\Support\Audit\Listeners\AuditReferralReward;
 use App\Support\Audit\Listeners\AuditRewardIssued;
 use App\Support\Audit\Listeners\AuditSubscriptionChanged;
+use App\Support\Settings\SiteSettingsService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -35,12 +37,15 @@ use Illuminate\Support\ServiceProvider;
 class AppServiceProvider extends ServiceProvider
 {
     /**
-     * درایورهای تعویض‌پذیر Infrastructure — فصل ۲-۲ سند معماری (Sprint 7).
+     * درایورهای تعویض‌پذیر Infrastructure — فصل ۲-۲ سند معماری (Sprint 7-8).
      * انتخاب درایور با env: SMS_CHANNEL=log|ippanel و PAYMENT_GATEWAY=fake|zarinpal.
-     * پیش‌فرض‌ها (log/fake) رفتار قبلی را حفظ می‌کنند — بدون env واقعی نیز تست‌ها سبز می‌مانند.
+     * سندباکس‌های تنظیمات سایت (بتای ۵ فروشگاه) مقدم بر env هستند — پیش‌فرض‌ها (log/fake) حفظ شده‌اند.
      */
     public function register(): void
     {
+        // تنظیمات سایت (تک‌ردیفی) — Singleton برای حداکثر یک Query در هر Request
+        $this->app->singleton(SiteSettingsService::class);
+
         $this->app->bind(SmsChannel::class, function (): SmsChannel {
             return match ((string) config('gamification.sms.channel', 'log')) {
                 'ippanel' => new IppanelSmsChannel(
@@ -54,6 +59,15 @@ class AppServiceProvider extends ServiceProvider
         });
 
         $this->app->bind(PaymentGateway::class, function (): PaymentGateway {
+            // سندباکس (تنظیمات سایت، فقط Admin) مقدم بر env — همان جریان کامل callback/verify بدون سرویس خارجی
+            try {
+                if (app(SiteSettingsService::class)->paymentSandboxEnabled()) {
+                    return new SandboxGateway;
+                }
+            } catch (\Throwable) {
+                // جدول تنظیمات هنوز مهاجرت نشده (مثلاً حین migrate) — ادامه با env
+            }
+
             return match ((string) config('gamification.payments.gateway', 'fake')) {
                 'zarinpal' => new ZarinpalGateway(
                     merchantId: (string) config('gamification.payments.zarinpal.merchant_id'),

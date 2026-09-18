@@ -7,6 +7,7 @@ import { panelAuth, panelStore, papi } from './client.js';
 const route = useRoute();
 const stores = ref([]);
 const currentStore = ref(null);
+const role = ref(localStorage.getItem('gm:panel:role') ?? 'merchant');
 
 const nav = [
     { to: '/', label: 'داشبورد', icon: '🏠' },
@@ -17,6 +18,11 @@ const nav = [
     { to: '/stores', label: 'فروشگاه‌ها', icon: '🏬' },
 ];
 
+// آیتم‌های فقط-Admin — تنظیمات سایت (Sprint 8)
+const navAdmin = [{ to: '/site-settings', label: 'تنظیمات سایت', icon: '⚙️' }];
+
+const visibleNav = () => (role.value === 'admin' ? [...nav, ...navAdmin] : nav);
+
 async function loadStores() {
     try {
         const data = await papi('/stores');
@@ -25,6 +31,13 @@ async function loadStores() {
         currentStore.value = stores.value.find((s) => s.id === id) ?? stores.value[0] ?? null;
         if (currentStore.value) panelStore.set(currentStore.value.id);
     } catch { /* login view handles auth errors */ }
+
+    // نقش کاربر از سرور تازه‌سازی می‌شود (منوی Admin + گارد روت)
+    try {
+        const me = await papi('/auth/me');
+        role.value = me.user?.role ?? 'merchant';
+        localStorage.setItem('gm:panel:role', role.value);
+    } catch { /* بدون توکن معتبر، لجین مسئول است */ }
 }
 
 function pick(s) {
@@ -35,6 +48,10 @@ function pick(s) {
 function logout() {
     panelAuth.set(null);
     panelStore.set(null);
+    try {
+        localStorage.removeItem('gm:panel:role');
+    } catch { /* noop */ }
+    role.value = 'merchant';
     window.location.hash = '#/login';
 }
 
@@ -59,7 +76,7 @@ onMounted(() => {
 
             <nav class="flex-1 space-y-1 p-3">
                 <router-link
-                    v-for="item in nav"
+                    v-for="item in visibleNav()"
                     :key="item.to + item.label"
                     :to="item.to"
                     class="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm transition hover:bg-white/10"
@@ -96,7 +113,7 @@ onMounted(() => {
             <!-- ناوبری موبایل -->
             <nav class="flex gap-2 overflow-x-auto border-b border-slate-200 bg-white px-3 py-2 md:hidden">
                 <router-link
-                    v-for="item in nav"
+                    v-for="item in visibleNav()"
                     :key="'m' + item.to + item.label"
                     :to="item.to"
                     class="whitespace-nowrap rounded-lg px-3 py-1.5 text-xs"

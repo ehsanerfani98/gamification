@@ -28,7 +28,10 @@ final class VerifyOtpAction
 
         AuditLog::record('auth.login', $user, $user);
 
-        $abilities = $purpose === OtpCode::PURPOSE_CUSTOMER_LOGIN ? ['customer'] : ['merchant'];
+        $abilities = $purpose === OtpCode::PURPOSE_CUSTOMER_LOGIN
+            ? ['customer']
+            // Admin علاوه بر دسترسی‌های کامل پنل، ability «admin» برای تنظیمات سایت می‌گیرد (Sprint 8)
+            : ($user->role === 'admin' ? ['merchant', 'admin'] : ['merchant']);
 
         $token = $user->createToken(
             $purpose === OtpCode::PURPOSE_CUSTOMER_LOGIN ? 'campaign' : 'panel',

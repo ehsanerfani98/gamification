@@ -5,6 +5,8 @@ namespace App\Domain\Authentication\Actions;
 use App\Domain\Authentication\Jobs\SendSmsJob;
 use App\Domain\Authentication\Services\OtpCodeHasher;
 use App\Models\OtpCode;
+use App\Support\Settings\SiteSettingsService;
+use Illuminate\Support\Facades\Log;
 
 /**
  * درخواست کد یک‌بارمصرف — فصل ۲-۵ و ۸-۳ سند معماری.
@@ -29,13 +31,22 @@ final class RequestOtpAction
             'expires_at' => now()->addMinutes($ttl),
         ]);
 
-        SendSmsJob::dispatch($phone, 'کد ورود شما به گیمیفیکیشن: '.$code);
+        // سندباکس پیامک (تنظیمات سایت — بتای ۵ فروشگاه): بدون ارسال واقعی؛
+        // کد در پاسخ API و لاگ می‌ماند تا جریان ورود بدون اعتبار IPPanel تست شود.
+        $smsSandbox = rescue(fn () => app(SiteSettingsService::class)->smsSandboxEnabled(), false, false);
+
+        if ($smsSandbox) {
+            Log::info('OTP generated in SMS sandbox mode (no real SMS sent)', ['phone' => $phone]);
+        } else {
+            SendSmsJob::dispatch($phone, 'کد ورود شما به گیمیفیکیشن: '.$code);
+        }
 
         return [
             'sent' => true,
             'expires_in' => $ttl * 60,
-            // فقط در محیط توسعه/تست؛ در production همیشه null است
-            'debug_code' => app()->environment('production') ? null : $code,
+            'sandbox' => $smsSandbox,
+            // کد در پاسخ: سندباکس پیامک یا محیط غیرتولیدی؛ در production واقعی همیشه null
+            'debug_code' => ($smsSandbox || ! app()->environment('production')) ? $code : null,
         ];
     }
 }

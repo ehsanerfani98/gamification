@@ -84,8 +84,25 @@ php artisan queue:work --tries=3 --backoff=5
 Domain انجام می‌شود (فصل ۳-۵ سند).
 
 **وضعیت درایورهای تولیدی:** پیامک و دروازه پرداخت قرارداد تعویض‌پذیر دارند
-(`app/Infrastructure/*`)؛ درایور فعلی `LogSmsChannel` و `FakeGateway` است و
-پیش از بتا باید درایور واقعی (مثلاً Kavenegar/Zarinpal) اضافه شود.
+(`app/Infrastructure/*`). درایورهای واقعی از Sprint 7 آماده‌اند:
+**IPPanel** (`SMS_CHANNEL=ippanel` + `IPANEL_API_KEY`/`IPANEL_ORIGINATOR`) و
+**ZarinPal v4** (`PAYMENT_GATEWAY=zarinpal` + `ZARINPAL_MERCHANT_ID`) —
+کلیدها را فقط در env سرور تنظیم کنید.
+
+## حالت سندباکس و بتای ۵ فروشگاه (Sprint 8)
+
+برای بتا بدون کلید واقعی، مدیر سایت دو سندباکس را از پنل روشن می‌کند:
+
+1. کاربر مدیر را ارتقا دهید (یک‌بار با OTP وارد پنل شده باشد):
+   `php artisan admin:promote 09xxxxxxxxx` → خارج/ورود مجدد پنل
+2. در پنل → **تنظیمات سایت** (منوی فقط-Admin):
+   - **📱 سندباکس پیامک**: OTP واقعاً ارسال نمی‌شود؛ کد در پاسخ API برمی‌گردد و جریان ورود تست می‌شود
+   - **💳 سندباکس دروازه پرداخت**: به‌جای ZarinPal صفحه پرداخت آزمایشی داخلی (`/payments/sandbox/{id}`) باز می‌شود؛
+     کل مسیر callback → verify → فعال‌سازی اشتراک → فاکتور → Audit دقیقاً مثل دروازه واقعی اجرا می‌شود
+3. پایان بتا: هر دو کلید خاموش و کلیدهای واقعی در env قرار می‌گیرد — بدون هیچ تغییر کد.
+
+وضعیت سندباکس هر پرداخت در `payments.meta.sandbox` و تغییر تنظیمات در
+Audit (`site.settings_updated`) ثبت می‌شود.
 
 ## ساختار کد (Domain-Oriented — فصل ۴ سند)
 

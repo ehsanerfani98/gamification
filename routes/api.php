@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AnalyticsController;
+use App\Http\Controllers\Api\V1\Auth\MeController as AuthMeController;
 use App\Http\Controllers\Api\V1\Auth\OtpController;
 use App\Http\Controllers\Api\V1\CampaignController;
 use App\Http\Controllers\Api\V1\CouponController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\Api\V1\GameController;
 use App\Http\Controllers\Api\V1\PaymentController;
 use App\Http\Controllers\Api\V1\PlanController;
 use App\Http\Controllers\Api\V1\RewardController;
+use App\Http\Controllers\Api\V1\SiteSettingsController;
 use App\Http\Controllers\Api\V1\StoreController;
 use App\Http\Controllers\Api\V1\SubscriptionController;
 use Illuminate\Support\Facades\Route;
@@ -32,6 +34,16 @@ Route::prefix('v1')->group(function (): void {
         ->middleware('throttle:otp');
     Route::post('auth/otp/verify', [OtpController::class, 'verify'])
         ->middleware('throttle:otp-verify');
+
+    // مشخصات کاربر جاری پنل — نقش برای نمایش منوی Admin پس از refresh صفحه (Sprint 8)
+    Route::get('auth/me', AuthMeController::class)
+        ->middleware(['auth:sanctum', 'ability:merchant,admin']);
+
+    // ── تنظیمات سایت (فقط Admin) — سندباکس پیامک/پرداخت برای بتا (Sprint 8) ──
+    Route::get('site-settings', [SiteSettingsController::class, 'show'])
+        ->middleware(['auth:sanctum', 'abilities:admin']);
+    Route::patch('site-settings', [SiteSettingsController::class, 'update'])
+        ->middleware(['auth:sanctum', 'abilities:admin']);
 
     // ── مسیرهای Merchant (توکن با ability «merchant») ─────────────
     Route::middleware(['auth:sanctum', 'abilities:merchant'])
