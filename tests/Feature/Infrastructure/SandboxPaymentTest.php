@@ -95,6 +95,32 @@ final class SandboxPaymentTest extends TestCase
         $this->get('/payments/sandbox/99999')->assertNotFound();
     }
 
+    public function test_sandbox_checkout_links_use_query_string_callback(): void
+    {
+        // رگرسیون: url($path, $array) پارامترها را segment مسیر می‌کند → callback سندباکس 404 می‌شد
+        $this->enablePaymentSandbox();
+        [$token, $store] = $this->createMerchantWithStore();
+        $payment = $this->subscribeToBasic($token, $store);
+
+        $html = (string) $this->get('/payments/sandbox/'.$payment->id)->getContent();
+
+        // مقایسه فقط path + query (مستقل از دامنه/پورت) — & در HTML به &amp; escape می‌شود
+        $expected = parse_url(route('payments.zarinpal.callback'), PHP_URL_PATH)
+            .'?'.http_build_query(['Authority' => $payment->reference, 'Status' => 'OK']);
+        $this->assertStringContainsString(htmlspecialchars($expected, ENT_QUOTES), $html);
+
+        // لینک نباید به‌صورت path segment باشد (سلول باگ قبلی)
+        $this->assertStringNotContainsString('/callback/'.$payment->reference, $html);
+
+        // لینک «پرداخت موفق» باید واقعاً به 404 نخورد و redirect پنل بدهد
+        $followed = $this->get(route('payments.zarinpal.callback', [
+            'Authority' => $payment->reference,
+            'Status' => 'OK',
+        ]));
+        $followed->assertRedirect();
+        $this->assertStringContainsString('payment=paid', (string) $followed->headers->get('Location'));
+    }
+
     public function test_sandbox_ok_callback_activates_subscription_and_creates_invoice(): void
     {
         $this->enablePaymentSandbox();

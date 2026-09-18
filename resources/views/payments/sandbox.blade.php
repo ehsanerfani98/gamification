@@ -52,8 +52,8 @@
             <div class="row"><span>شناسه پرداخت</span><b>#{{ $payment->id }}</b></div>
 
             <div class="btns">
-                <a class="btn pay" href="{{ url('/api/v1/payments/zarinpal/callback', ['Authority' => $payment->reference, 'Status' => 'OK']) }}">✅ پرداخت موفق (شبیه‌سازی)</a>
-                <a class="btn cancel" href="{{ url('/api/v1/payments/zarinpal/callback', ['Authority' => $payment->reference, 'Status' => 'NOK']) }}">✖ انصراف / پرداخت ناموفق</a>
+                <a class="btn pay" href="{{ url('/api/v1/payments/zarinpal/callback') }}?{{ http_build_query(['Authority' => $payment->reference, 'Status' => 'OK']) }}">✅ پرداخت موفق (شبیه‌سازی)</a>
+                <a class="btn cancel" href="{{ url('/api/v1/payments/zarinpal/callback') }}?{{ http_build_query(['Authority' => $payment->reference, 'Status' => 'NOK']) }}">✖ انصراف / پرداخت ناموفق</a>
             </div>
         </div>
         <p class="foot">پس از انتخاب، به پنل فروشگاه‌دار بازمی‌گردید. برای پرداخت واقعی، حالت سندباکس را در تنظیمات سایت خاموش و کلیدهای ZarinPal را در env تنظیم کنید.</p>
