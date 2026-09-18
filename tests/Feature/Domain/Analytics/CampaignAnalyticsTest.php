@@ -286,7 +286,7 @@ final class CampaignAnalyticsTest extends TestCase
         $customer = Customer::query()->create([
             'store_id' => $store['id'],
             'phone' => '09333335555',
-            'referral_code' => 'CHK'.random_int(100, 999),
+            'referral_code' => $this->uniqueReferralCode('CHK'),
         ]);
 
         $customerToken = $customer->createToken('campaign', ['customer'])->plainTextToken;

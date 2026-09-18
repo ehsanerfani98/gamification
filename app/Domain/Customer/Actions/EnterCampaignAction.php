@@ -35,7 +35,7 @@ final class EnterCampaignAction
         $customer = Customer::query()->firstOrCreate(
             ['store_id' => $campaign->store_id, 'phone' => $phone],
             [
-                'referral_code' => strtoupper(Str::random(6)),
+                'referral_code' => $this->uniqueReferralCode(),
                 'last_seen_at' => now(),
             ],
         );
@@ -68,5 +68,23 @@ final class EnterCampaignAction
                 'error' => $e->getMessage(),
             ]);
         }
+    }
+
+    /**
+     * کد دعوت یکتا روی ستون unique — در تصادم تصادفی نادر، تا ۵ بار تلاش می‌شود
+     * تا ورود مشتری هرگز با 500 شکست نخورد (اصطکاک صفر ورود — فصل ۹-۱).
+     */
+    private function uniqueReferralCode(): string
+    {
+        for ($attempt = 0; $attempt < 5; $attempt++) {
+            $code = strtoupper(Str::random(6));
+
+            if (! Customer::query()->where('referral_code', $code)->exists()) {
+                return $code;
+            }
+        }
+
+        // عملاً غیرقابل‌دسترس (فضای ۳۶⁶ ≈ ۲ میلیارد) — احتیاط محض
+        return strtoupper(Str::random(12));
     }
 }

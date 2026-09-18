@@ -47,7 +47,7 @@ final class ReferralTest extends TestCase
         $referrer = Customer::query()->create([
             'store_id' => $store->id,
             'phone' => $phone,
-            'referral_code' => 'REF'.random_int(1000, 9999),
+            'referral_code' => $this->uniqueReferralCode('REF'),
         ]);
 
         return [$store, $referrer];
@@ -58,7 +58,7 @@ final class ReferralTest extends TestCase
         $customer = Customer::query()->create([
             'store_id' => $storeId,
             'phone' => $phone,
-            'referral_code' => 'INV'.random_int(10000, 99999),
+            'referral_code' => $this->uniqueReferralCode('INV'),
         ]);
 
         return [$customer, $customer->createToken('campaign', ['customer'])->plainTextToken];
@@ -213,7 +213,7 @@ final class ReferralTest extends TestCase
         $referrer = Customer::query()->create([
             'store_id' => $store['id'],
             'phone' => '09125558111',
-            'referral_code' => 'REF'.random_int(1000, 9999),
+            'referral_code' => $this->uniqueReferralCode('REF'),
         ]);
 
         $code = $this->postJson("/api/v1/c/{$campaign->slug}/otp", ['phone' => '09335555555'])

@@ -51,12 +51,23 @@ trait CreatesCampaigns
         return [$token, $store, $campaign];
     }
 
+    /**
+     * کد دعوت یکتا برای تست‌ها — شمارنده در سطح پروسه؛ تصادم با ستون unique غیرممکن می‌شود.
+     * (قبلاً random_int با فضای ۹۰۰تایی بود و در اجرای کامل Suite گاهی تصادم می‌کرد — flaky CI)
+     */
+    private static int $referralCodeSeq = 0;
+
+    protected function uniqueReferralCode(string $prefix = 'TST'): string
+    {
+        return $prefix.str_pad((string) ++self::$referralCodeSeq, 7, '0', STR_PAD_LEFT);
+    }
+
     /** توکن مشتری بدون عبور از جریان OTP (برای سرعت تست‌ها) */
     protected function customerToken(int $storeId, string $phone = '09331112233'): string
     {
         $customer = Customer::query()->firstOrCreate(
             ['store_id' => $storeId, 'phone' => $phone],
-            ['referral_code' => 'TEST'.random_int(100, 999)],
+            ['referral_code' => $this->uniqueReferralCode('TEST')],
         );
 
         return $customer->createToken('campaign', ['customer'])->plainTextToken;
@@ -113,7 +124,7 @@ trait CreatesCampaigns
     {
         $customer = Customer::query()->firstOrCreate(
             ['store_id' => $campaign->store_id, 'phone' => $phone],
-            ['referral_code' => 'TST'.random_int(100, 999)],
+            ['referral_code' => $this->uniqueReferralCode('TST')],
         );
 
         return GameSession::query()->create([
