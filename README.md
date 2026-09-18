@@ -43,6 +43,24 @@ php artisan serve              # http://localhost:8000
 
 > در حالت توسعه، درایور پیامک `log` است و کد OTP در `storage/logs/laravel.log` ثبت می‌شود.
 
+### دموی آماده و پایش بتا
+
+```bash
+php artisan demo:seed         # فروشگاه نمونه + کمپین demo-wheel منتشرشده (Idempotent)
+php artisan beta:status       # گزارش زنده بتای ۵ فروشگاه + گام بعدی پیشنهادی
+```
+
+پس از `demo:seed`، صفحه `/c/demo-wheel` یک چرخ شانس واقعی با جایزه کوپن و امتیاز است
+(هم برای تست دستی و هم برای اندازه‌گیری Lighthouse).
+
+## بودجه عملکرد (Sprint 4 — فصل ۹ سند)
+
+| معیار | بودجه | نحوه پایش |
+|-------|-------|-----------|
+| JS لندینگ | < 150KB فشرده (gzip) | `node scripts/perf/bundle-budget.mjs` — گراف import استاتیک هر Entry از manifest Vite |
+| LCP | < 2.5s | Lighthouse CI روی `/c/demo-wheel` و `/panel` (جاب `performance` در GitHub Actions) |
+| TTI | < 3s | همان جاب — نسخه @lhci/cli پین‌شده برای پایداری assertions |
+
 ## تست‌ها
 
 ```bash
@@ -103,6 +121,9 @@ Domain انجام می‌شود (فصل ۳-۵ سند).
 
 وضعیت سندباکس هر پرداخت در `payments.meta.sandbox` و تغییر تنظیمات در
 Audit (`site.settings_updated`) ثبت می‌شود.
+
+راهنمای گام‌به‌گام اجرای بتا: **[docs/BETA_ONBOARDING.md](docs/BETA_ONBOARDING.md)** ·
+فرم بازخورد پایلوت: **[docs/BETA_FEEDBACK_TEMPLATE.md](docs/BETA_FEEDBACK_TEMPLATE.md)**
 
 ## ساختار کد (Domain-Oriented — فصل ۴ سند)
 

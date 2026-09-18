@@ -47,3 +47,62 @@ jobs:
 
       - name: Run tests
         run: php artisan test
+
+  # بودجه عملکرد فصل ۹ — Sprint 4: LCP < 2.5s، TTI < 3s، JS لندینگ < 150KB فشرده
+  performance:
+    name: Performance budget (Lighthouse CI)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: sqlite3, pdo_sqlite, mbstring, dom, xml, zip, fileinfo, curl
+          coverage: none
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate --force
+
+      - name: Prepare SQLite database
+        run: |
+          touch database/database.sqlite
+          php artisan migrate --force
+
+      - name: Build frontend (Vite)
+        run: npm ci && npm run build
+
+      - name: Seed demo campaign
+        run: php artisan demo:seed
+
+      # بودجه JS لندینگ (< 150KB gzip برای هر Entry) — بدون نیاز به مرورگر
+      - name: JS bundle budget (gzip)
+        run: node scripts/perf/bundle-budget.mjs
+
+      # اندازه‌گیری production-like: nginx تولیدی gzip می‌دهد؛ روتر همین رفتار را شبیه‌سازی می‌کند
+      - name: Start app server
+        run: nohup php -S 127.0.0.1:8080 -t public scripts/perf/server.php > storage/logs/serve.log 2>&1 &
+
+      - name: Wait for server
+        run: |
+          for i in $(seq 1 30); do
+            curl -sf http://127.0.0.1:8080/panel > /dev/null && exit 0
+            sleep 1
+          done
+          echo "server did not start" && cat storage/logs/serve.log && exit 1
+
+      # نسخه پین‌شده برای پایداری assertions (Lighthouse 12.6.1 داخل @lhci/cli)
+      - name: Run Lighthouse CI
+        run: npx -y @lhci/cli@0.15.1 autorun
